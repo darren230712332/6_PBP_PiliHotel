@@ -36,7 +36,7 @@ Future<void> showLogoutDialog(BuildContext context) {
               color: AppColors.danger,
               onPressed: () => Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
+                MaterialPageRoute(builder: (_) => const SplashPage()),
                 (_) => false,
               ),
             ),
