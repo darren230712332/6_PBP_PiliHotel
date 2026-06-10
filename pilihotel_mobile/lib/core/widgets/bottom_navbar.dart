@@ -38,20 +38,20 @@ class _MainShellState extends State<MainShell> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _Item(
+             _Item(
               icon: Icons.search_rounded,
               label: 'EKSPLOR',
               active: index == 0,
               onTap: () => setState(() => index = 0),
             ),
             _Item(
-              icon: Icons.receipt_long_outlined,
+              icon: Icons.luggage_outlined,
               label: 'PESANAN',
               active: index == 1,
               onTap: () => setState(() => index = 1),
             ),
             _Item(
-              icon: Icons.account_circle_outlined,
+              icon: Icons.person_outline,
               label: 'PROFIL',
               active: index == 2,
               onTap: () => setState(() => index = 2),

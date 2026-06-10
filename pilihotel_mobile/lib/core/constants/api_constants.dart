@@ -21,8 +21,8 @@ class ApiConstants {
   static const String paymentDetail = '/payments/:id';
 
   // User endpoints
-  static const String userProfile = '/users/profile';
-  static const String userUpdate = '/users/profile';
+  static const String userProfile = '/profile';
+  static const String userUpdate = '/profile';
 }
 
 /// Storage keys

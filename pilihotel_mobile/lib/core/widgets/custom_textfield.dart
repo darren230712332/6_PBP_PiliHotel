@@ -33,9 +33,9 @@ class CustomTextField extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: AppColors.text,
+            color: Color(0xFF1E293B),
           ),
         ),
         const SizedBox(height: 7),
@@ -43,34 +43,34 @@ class CustomTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscure,
           onChanged: onChanged,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(fontSize: 11, color: AppColors.muted),
+            hintStyle: const TextStyle(fontSize: 12, color: AppColors.muted),
             prefixIcon: icon == null
                 ? null
-                : Icon(icon, size: 17, color: AppColors.muted),
+                : Icon(icon, size: 18, color: AppColors.muted),
             suffixIcon: suffix,
             filled: true,
             fillColor: AppColors.field,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 13,
+              horizontal: 16,
+              vertical: 14,
             ),
             errorText: hasError ? errorText : null,
             errorStyle: const TextStyle(fontSize: 10, height: .8),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
                 color: hasError ? AppColors.danger : AppColors.border,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
                 color: hasError ? AppColors.danger : AppColors.primaryBlue,
               ),

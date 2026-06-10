@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
 import '../core/services/auth_service.dart';
-import '../core/widgets/bottom_navbar.dart';
 import '../core/widgets/custom_textfield.dart';
 import '../core/widgets/primary_button.dart';
+import 'register_success_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -37,9 +37,10 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
+          padding: const EdgeInsets.fromLTRB(28, 18, 28, 20),
           child: Column(
             children: [
+              const SizedBox(height: 12),
               Stack(
                 alignment: Alignment.bottomRight,
                 children: [
@@ -162,16 +163,26 @@ class _RegisterPageState extends State<RegisterPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Sudah punya akun?',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                    'Sudah punya akun? ',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.muted,
+                    ),
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     onPressed: () => Navigator.pop(context),
                     child: const Text(
                       'Masuk',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
+                        color: AppColors.primaryBlue,
                       ),
                     ),
                   ),
@@ -227,7 +238,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (result['success'] == true) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
+        MaterialPageRoute(builder: (_) => const RegisterSuccessPage()),
         (_) => false,
       );
     } else {

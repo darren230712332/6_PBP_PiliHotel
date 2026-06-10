@@ -98,10 +98,6 @@ class AuthService {
           jsonDecode(response.body) as Map<String, dynamic>,
         );
 
-        if (authResponse.token.isNotEmpty) {
-          await _httpClient.saveToken(authResponse.token);
-        }
-
         return {
           'success': true,
           'user': authResponse.user,
@@ -197,6 +193,51 @@ class AuthService {
       return {
         'success': false,
         'message': error['message'] ?? 'Google login failed',
+        'errors': error['errors'],
+      };
+    } catch (e) {
+      final str = e.toString();
+      if (str.contains('ApiException: 10') || str.contains('sign_in_failed')) {
+        return {
+          'success': false,
+          'needs_mock': true,
+          'message': str,
+        };
+      }
+      return _handleException(e);
+    }
+  }
+
+  /// Login or register using a mock Google account (useful for local testing / developer environments)
+  Future<Map<String, dynamic>> loginWithMockGoogle() async {
+    try {
+      final response = await _httpClient.post(
+        '/auth/google',
+        body: {
+          'google_id': 'mock_google_id_998877',
+          'name': 'Google Test User',
+          'email': 'google_test@gmail.com',
+          'photo_url': 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final authResponse = AuthResponse.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
+        await _httpClient.saveToken(authResponse.token);
+
+        return {
+          'success': true,
+          'user': authResponse.user,
+          'token': authResponse.token,
+        };
+      }
+
+      final error = _parseErrorResponse(response.body);
+      return {
+        'success': false,
+        'message': error['message'] ?? 'Mock Google login failed',
         'errors': error['errors'],
       };
     } catch (e) {

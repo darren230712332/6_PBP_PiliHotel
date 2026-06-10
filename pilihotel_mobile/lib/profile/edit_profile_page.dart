@@ -1,9 +1,8 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../core/colors.dart';
 import '../core/services/auth_service.dart';
 import '../core/widgets/custom_appbar.dart';
 import '../core/widgets/custom_dialog.dart';
@@ -114,7 +113,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final email = _emailController.text.trim();
 
     setState(() => _loading = true);
-    await showPiliLoadingDialog(context, message: 'Menyimpan perubahan profil...');
+    showPiliLoadingDialog(context, message: 'Menyimpan perubahan profil...');
 
     try {
       // Run photo upload and profile update in parallel
@@ -185,12 +184,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final image = _pickedImage != null
-        ? FileImage(_pickedImage!)
-        : _currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty
-            ? NetworkImage(_currentPhotoUrl!)
-            : null;
-
     return Scaffold(
       appBar: const CustomAppBar(title: 'Profil Saya'),
       body: Padding(
@@ -199,11 +192,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
           children: [
             GestureDetector(
               onTap: _chooseImageSource,
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: const Color(0xFFD8A15F),
-                backgroundImage: image as ImageProvider?,
-                child: image == null ? const Icon(Icons.camera_alt, size: 34, color: Colors.white) : null,
+              child: ClipOval(
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  color: const Color(0xFFD8A15F),
+                  child: _pickedImage != null
+                      ? Image.file(
+                          _pickedImage!,
+                          width: 96,
+                          height: 96,
+                          fit: BoxFit.cover,
+                        )
+                      : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
+                          ? Image.network(
+                              _currentPhotoUrl!,
+                              width: 96,
+                              height: 96,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.camera_alt, size: 34, color: Colors.white),
+                            )
+                          : const Icon(Icons.camera_alt, size: 34, color: Colors.white),
+                ),
               ),
             ),
             const SizedBox(height: 10),

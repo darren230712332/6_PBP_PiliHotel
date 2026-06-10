@@ -1,3 +1,5 @@
+import '../services/http_client.dart';
+
 class User {
   final int id;
   final String name;
@@ -21,7 +23,7 @@ class User {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'],
-      photoUrl: json['photo_url'],
+      photoUrl: HttpClient.formatAssetUrl(json['photo_url']),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),

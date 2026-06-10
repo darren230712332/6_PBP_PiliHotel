@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
 import '../core/models/hotel.dart' as api;
@@ -149,10 +149,12 @@ class _NearbyHotelItem {
   final double distanceKm;
 
   UiHotel toUiHotel() {
+    final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    final formattedPrice = 'Rp${hotel.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
     return UiHotel(
       name: hotel.name,
       location: hotel.location,
-      price: 'Rp${hotel.pricePerNight}',
+      price: formattedPrice,
       rating: hotel.rating,
       image: hotel.image,
       distance: _formatDistance(distanceKm),

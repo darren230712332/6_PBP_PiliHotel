@@ -5,12 +5,14 @@ import 'success_scaffold.dart';
 
 /// Page displayed after successful login
 class LoginSuccessPage extends StatelessWidget {
-  const LoginSuccessPage({super.key});
+  const LoginSuccessPage({super.key, this.userName = 'Andi'});
+
+  final String userName;
 
   @override
   Widget build(BuildContext context) => SuccessScaffold(
     title: 'Login Berhasil!',
-    message: 'Selamat datang Andi. Selamat merencanakan perjalanan Anda.',
+    message: 'Selamat datang $userName!\nSelamat menggunakan Aplikasi\nPiliHotel',
     button: 'Ke Beranda',
     onPressed: () => Navigator.pushAndRemoveUntil(
       context,

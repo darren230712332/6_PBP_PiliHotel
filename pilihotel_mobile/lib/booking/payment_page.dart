@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
 import '../core/services/booking_service.dart';
@@ -166,13 +166,18 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 
   Future<void> _payBooking() async {
     setState(() => _loading = true);
-    await showPiliLoadingDialog(context, message: 'Menyelesaikan pembayaran...');
+    showPiliLoadingDialog(context, message: 'Menyelesaikan pembayaran...');
 
+    print('DEBUG_PAYMENT: Initiating payment for booking ID: ${widget.bookingId}');
     try {
+      final methodStr = method == 'wallet' ? 'Grand Palace Wallet' : 'Transfer Bank';
+      print('DEBUG_PAYMENT: Selected method: $methodStr');
+      
       final booking = await _bookingService.payBooking(
         widget.bookingId,
-        paymentMethod: method == 'wallet' ? 'Grand Palace Wallet' : 'Transfer Bank',
+        paymentMethod: methodStr,
       );
+      print('DEBUG_PAYMENT: Payment response received. New status: ${booking.status}');
 
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
@@ -187,6 +192,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         ),
       );
     } catch (e) {
+      print('DEBUG_PAYMENT: Error caught during payment: $e');
       if (mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }

@@ -63,82 +63,76 @@ class HotelImage extends StatelessWidget {
     required this.kind,
     this.height = 126,
     this.width,
+    this.borderRadius,
   });
 
   final String kind;
   final double height;
   final double? width;
+  final BorderRadius? borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    final palettes = switch (kind) {
-      'pool' => [
-        const Color(0xFFE9B777),
-        const Color(0xFF7CD6FF),
-        const Color(0xFF164E84),
-      ],
-      'sea' => [
-        const Color(0xFFFFC773),
-        const Color(0xFF42C6FF),
-        const Color(0xFF0C3567),
-      ],
-      'night' => [
-        const Color(0xFF191D29),
-        const Color(0xFFB7834F),
-        const Color(0xFF0D1526),
-      ],
-      _ => [
-        const Color(0xFF76553B),
-        const Color(0xFFF6E7CF),
-        const Color(0xFF2A2F38),
-      ],
-    };
+    final isUrl = kind.startsWith('http');
+    final String imageUrl = isUrl ? kind : _mapKindToUrl(kind);
+
     return Container(
       height: height,
       width: width,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: palettes,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: borderRadius ?? BorderRadius.circular(10),
+      ),
+      child: Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
               ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: height * .32,
-              color: Colors.black.withValues(alpha: .22),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: AppColors.primaryBlue.withOpacity(0.08),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.hotel_outlined,
+              color: AppColors.muted,
+              size: 24,
             ),
-          ),
-          Center(
-            child: Container(
-              width: (width ?? 190) * .58,
-              height: height * .33,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .84),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(50),
-                  bottom: Radius.circular(8),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: .18),
-                    blurRadius: 20,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  String _mapKindToUrl(String key) {
+    switch (key) {
+      case 'pool':
+        return 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80';
+      case 'sea':
+        return 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&q=80';
+      case 'night':
+        return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80';
+      case 'modern':
+        return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80';
+      case 'corridor':
+        return 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80';
+      case 'bed':
+      default:
+        return 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80';
+    }
   }
 }
 
