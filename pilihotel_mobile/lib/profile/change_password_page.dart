@@ -55,7 +55,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     }
 
     setState(() => _loading = true);
-    await showPiliLoadingDialog(context, message: 'Menyimpan kata sandi baru...');
+    showPiliLoadingDialog(context, message: 'Menyimpan kata sandi baru...');
 
     final res = await _authService.changePassword(
       currentPassword: current,

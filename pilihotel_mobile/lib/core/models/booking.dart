@@ -1,6 +1,7 @@
 import 'hotel.dart';
 import 'room.dart';
 import 'review.dart';
+export 'review.dart';
 
 class Booking {
   final int id;

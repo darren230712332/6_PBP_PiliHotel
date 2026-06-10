@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 import '../booking/booking_page.dart';
 import '../core/colors.dart';
@@ -8,26 +9,32 @@ import '../core/models/room.dart' as api;
 import '../core/services/review_service.dart';
 import '../core/widgets/custom_appbar.dart';
 import '../core/widgets/primary_button.dart';
-import '../core/widgets/rating_widget.dart';
 
-double _asDouble(dynamic value, [double defaultValue = 0.0]) {
-  if (value is double) return value;
-  if (value is num) return value.toDouble();
-  if (value is String) {
-    return double.tryParse(value) ?? num.tryParse(value)?.toDouble() ?? defaultValue;
-  }
-  return defaultValue;
-}
-
-class RoomDetailPage extends StatelessWidget {
-  RoomDetailPage({super.key, required this.hotel, required this.room});
+class RoomDetailPage extends StatefulWidget {
+  const RoomDetailPage({super.key, required this.hotel, required this.room});
 
   final UiHotel hotel;
   final api.Room room;
+
+  @override
+  State<RoomDetailPage> createState() => _RoomDetailPageState();
+}
+
+class _RoomDetailPageState extends State<RoomDetailPage> {
   final ReviewService _reviewService = ReviewService();
+  late Future<List<api_review.Review>> _reviewsFuture;
+  bool _showAllReviews = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reviewsFuture = _reviewService.getReviews();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final roomName = widget.room.name == 'Deluxe King Room' ? 'Deluxe King Suite' : widget.room.name;
+
     return Scaffold(
       appBar: const CustomAppBar(title: 'Detail Kamar'),
       body: ListView(
@@ -37,19 +44,19 @@ class RoomDetailPage extends StatelessWidget {
             height: 230,
             child: PageView(
               children: [
-                for (final photo in (room.photos.isNotEmpty ? room.photos : [hotel.image]))
+                for (final photo in (widget.room.photos.isNotEmpty ? widget.room.photos : [widget.hotel.image]))
                   HotelImage(kind: photo, height: 230, width: double.infinity),
               ],
             ),
           ),
           const SizedBox(height: 14),
           Text(
-            room.name,
+            roomName,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 4),
           Text(
-            hotel.name,
+            widget.hotel.name,
             style: const TextStyle(
               fontSize: 11,
               color: AppColors.primaryBlue,
@@ -60,19 +67,19 @@ class RoomDetailPage extends StatelessWidget {
           Row(
             children: [
               _Spec(
-                icon: Icons.people_alt_outlined,
+                icon: Icons.people_outline,
                 label: '2',
                 caption: 'Dewasa',
                 onTap: () => _showInfo(context, 'Kapasitas 2 orang dewasa'),
               ),
               _Spec(
-                icon: Icons.king_bed_outlined,
+                icon: Icons.bed_outlined,
                 label: '1',
-                caption: 'King Bed',
+                caption: 'Kamar Tidur',
                 onTap: () => _showInfo(context, '1 kasur king tersedia'),
               ),
               _Spec(
-                icon: Icons.square_foot_outlined,
+                icon: Icons.bathtub_outlined,
                 label: '1',
                 caption: 'Kamar Mandi',
                 onTap: () => _showInfo(context, '1 kamar mandi pribadi'),
@@ -86,7 +93,7 @@ class RoomDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            room.description ?? 'Kamar luas dengan pencahayaan hangat, kasur nyaman, kamar mandi privat, dan suasana tenang untuk istirahat maksimal.',
+            widget.room.description ?? 'Kamar luas dengan pencahayaan hangat, kasur nyaman, kamar mandi privat, dan suasana tenang untuk istirahat maksimal.',
             style: const TextStyle(
               fontSize: 12,
               height: 1.55,
@@ -101,10 +108,10 @@ class RoomDetailPage extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              for (final facility in (room.facilities ?? ['WiFi', 'AC', 'TV', 'Kopi']).take(4))
+              for (final facility in (widget.room.facilities ?? ['WiFi', 'AC', 'TV', 'Kopi']).take(4))
                 _Facility(
                   icon: _facilityIcon(facility),
-                  label: facility,
+                  label: _mapFacilityLabel(facility),
                   onTap: () => _showInfo(context, '$facility tersedia'),
                 ),
             ],
@@ -117,35 +124,42 @@ class RoomDetailPage extends StatelessWidget {
                 'Ulasan Pengguna',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
               ),
-              GestureDetector(
-                onTap: () => _showAllReviews(context),
-                child: const Text(
-                  'Lihat Semua Ulasan',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryBlue,
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
+                  const SizedBox(width: 3),
+                  const Text(
+                    '4.8',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _showAllReviews ? '(3 ulasan)' : '(124 ulasan)',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
           FutureBuilder<List<api_review.Review>>(
-            future: _reviewService.getReviews(),
+            future: _reviewsFuture,
             builder: (context, snapshot) {
               final reviews = (snapshot.data ?? [])
-                  .where((review) => review.roomId == room.id)
+                  .where((review) => review.roomId == widget.room.id)
                   .toList();
 
-              if (snapshot.connectionState == ConnectionState.waiting && reviews.isEmpty) {
-                return const Center(child: Padding(
-                  padding: EdgeInsets.all(18),
-                  child: CircularProgressIndicator(),
-                ));
-              }
-
-              return Column(children: _buildReviewCards(reviews));
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _buildReviewCards(reviews),
+              );
             },
           ),
           const SizedBox(height: 24),
@@ -154,35 +168,29 @@ class RoomDetailPage extends StatelessWidget {
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 12),
-          Container(
-            height: 180,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(9),
-              color: Colors.grey[200],
-            ),
-            child: Center(
-              child: Icon(
-                Icons.location_on_outlined,
-                color: AppColors.primaryBlue,
-                size: 48,
-              ),
-            ),
-          ),
+          const _MockMapView(),
           const SizedBox(height: 12),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 16,
-                color: AppColors.primaryBlue,
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: AppColors.muted,
+                ),
               ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  hotel.location,
+                  widget.hotel.location == 'Yogyakarta, Indonesia'
+                      ? 'Jl. Babarsari No. 123, Sleman, Yogyakarta. 5 menit jalan kaki dari pusat perbelanjaan dan kampus utama.'
+                      : widget.hotel.location,
                   style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.muted,
+                    height: 1.4,
                   ),
                 ),
               ),
@@ -205,35 +213,69 @@ class RoomDetailPage extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                  'Rp${room.pricePerNight}\n/malam',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.text,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'HARGA PER MALAM',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Rp${widget.room.pricePerNight.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: ' /malam',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
               child: PrimaryButton(
                 text: 'Pesan Sekarang',
                 icon: Icons.arrow_forward,
-                  onPressed: () => Navigator.push(
+                iconOnRight: true,
+                onPressed: () {
+                  final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+                  final formattedPrice = 'Rp${widget.room.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => BookingPage(
                         hotel: UiHotel(
-                          name: hotel.name,
-                          location: hotel.location,
-                          price: 'Rp${room.pricePerNight}',
-                          rating: hotel.rating,
-                          image: hotel.image,
-                          distance: hotel.distance,
+                          name: widget.hotel.name,
+                          location: widget.hotel.location,
+                          price: formattedPrice,
+                          rating: widget.hotel.rating,
+                          image: widget.hotel.image,
+                          distance: widget.hotel.distance,
                         ),
-                        roomId: room.id,
+                        roomId: widget.room.id,
                       ),
                     ),
-                  ),
+                  );
+                },
               ),
             ),
           ],
@@ -242,117 +284,13 @@ class RoomDetailPage extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildReviewCards(List<api_review.Review> apiReviews) {
-    final reviews = apiReviews.isNotEmpty
-        ? apiReviews
-            .map(
-              (review) => {
-                'name': 'Tamu PiliHotel',
-                'rating': review.rating,
-                'text': review.comment ?? 'Tamu belum menambahkan komentar.',
-                'photos': review.photos ?? <String>[],
-              },
-            )
-            .toList()
-        : [
-      {
-        'name': 'Jane Doe',
-        'rating': 4.8,
-        'text':
-            'Kamar nyaman, pelayanan ramah, dan pemandangan bagus. Puas dengan kualitas fasilitas.',
-        'photos': <String>[],
-      },
-      {
-        'name': 'Ahmad Riski',
-        'rating': 4.5,
-        'text':
-            'Staf sangat puas menangani silhouetti. Lifewalking strategi, detail, ruang bersih. Sarapan lezat. Harga terjangkau. Akan datang lagi dengan keluarga',
-        'photos': <String>[],
-      },
-      {
-        'name': 'Joko Rina',
-        'rating': 4.7,
-        'text':
-            'Pemandangan laut yang sunyi tidak menggangu, kamar dengan AC yang dingin. Pelayanan staff sangat memuaskan, sarapan enak, parkir luas.',
-        'photos': <String>[],
-      },
-    ];
-
-    return [
-      for (int i = 0; i < reviews.length; i++) ...[
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: .05),
-                blurRadius: 12,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Color(0xFFD8A15F),
-                    child: Icon(Icons.person, size: 24, color: Colors.white),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          reviews[i]['name'] as String,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        RatingWidget(rating: _asDouble(reviews[i]['rating'])),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                reviews[i]['text'] as String,
-                style: const TextStyle(
-                  fontSize: 11,
-                  height: 1.45,
-                  color: AppColors.muted,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _ReviewPhotos(photos: reviews[i]['photos'] as List<String>),
-            ],
-          ),
-        ),
-        if (i < reviews.length - 1) const SizedBox(height: 12),
-      ],
-    ];
-  }
-
-  void _showAllReviews(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const _AllReviewsPage(),
-      ),
-    );
-  }
-
-  void _showInfo(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
-    );
+  String _mapFacilityLabel(String facility) {
+    final lower = facility.toLowerCase();
+    if (lower.contains('wifi')) return 'WiFi Gratis';
+    if (lower == 'ac') return 'AC';
+    if (lower.contains('tv')) return 'TV Pintar';
+    if (lower.contains('kopi') || lower.contains('teh')) return 'Kopi';
+    return facility;
   }
 
   IconData _facilityIcon(String facility) {
@@ -364,6 +302,220 @@ class RoomDetailPage extends StatelessWidget {
     if (value.contains('sarapan')) return Icons.restaurant_outlined;
     if (value.contains('kulkas')) return Icons.kitchen_outlined;
     return Icons.check_circle_outline;
+  }
+
+  void _showInfo(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+    );
+  }
+
+  List<Widget> _buildReviewCards(List<api_review.Review> apiReviews) {
+    final List<Map<String, dynamic>> allReviews = [];
+
+    // Prepend API reviews
+    for (final review in apiReviews) {
+      allReviews.add({
+        'name': 'Tamu PiliHotel',
+        'rating': review.rating.toDouble(),
+        'text': review.comment ?? 'Tamu belum menambahkan komentar.',
+        'photos': review.photos ?? <String>[],
+        'date': 'Baru saja',
+      });
+    }
+
+    // Append mock reviews
+    allReviews.addAll([
+      {
+        'name': 'Jane Doe',
+        'rating': 4.8,
+        'text': 'Pemandangannya luar biasa! Kamar sangat bersih dan staf di PiliHotel sangat membantu selama saya menginap. Sangat direkomendasikan untuk perjalanan bisnis.',
+        'photos': <String>[
+          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'
+        ],
+        'date': '2 hari yang lalu',
+      },
+      {
+        'name': 'Ahmad Riski',
+        'rating': 4.5,
+        'text': 'Saya sangat puas menginap di hotel ini. Lokasinya strategis, dekat dengan pusat kota dan mudah dijangkau. Kamar bersih, nyaman, dan fasilitas lengkap seperti WiFi cepat, AC dingin, serta kamar mandi yang terawat. Pelayanan staf juga sangat ramah dan responsif. Sarapan pagi cukup variatif dan rasanya enak. Sangat direkomendasikan untuk liburan maupun perjalanan bisnis!',
+        'photos': <String>[
+          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'
+        ],
+        'date': '2 hari yang lalu',
+      },
+      {
+        'name': 'Joko Rino',
+        'rating': 4.7,
+        'text': 'Pemandangannya luar biasa! Kamar sangat bersih dan staf di PiliHotel sangat membantu selama saya menginap. Sangat direkomendasikan untuk perjalanan bisnis.',
+        'photos': <String>[
+          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'
+        ],
+        'date': '2 hari yang lalu',
+      },
+    ]);
+
+    final visibleReviews = _showAllReviews ? allReviews : allReviews.take(1).toList();
+
+    return [
+      for (int i = 0; i < visibleReviews.length; i++) ...[
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: .04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: const Color(0xFFEAF4FF),
+                    child: Text(
+                      _getInitials(visibleReviews[i]['name'] as String),
+                      style: const TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        visibleReviews[i]['name'] as String,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        visibleReviews[i]['date'] as String,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => const Icon(
+                        Icons.star_rounded,
+                        color: AppColors.warning,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                visibleReviews[i]['text'] as String,
+                style: const TextStyle(
+                  fontSize: 11,
+                  height: 1.45,
+                  color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _ReviewPhotos(photos: List<String>.from(visibleReviews[i]['photos'] as List)),
+            ],
+          ),
+        ),
+        if (i < visibleReviews.length - 1) const SizedBox(height: 12),
+      ],
+      if (!_showAllReviews && allReviews.length > 1) ...[
+        const SizedBox(height: 14),
+        _buildExpandButton(),
+      ] else if (_showAllReviews && allReviews.length > 1) ...[
+        const SizedBox(height: 14),
+        _buildCollapseButton(),
+      ],
+    ];
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty || parts[0].isEmpty) return 'U';
+    if (parts.length == 1) return parts[0].substring(0, min(1, parts[0].length)).toUpperCase();
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  Widget _buildExpandButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showAllReviews = true;
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFD),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE7EEF7)),
+        ),
+        child: const Center(
+          child: Text(
+            'Baca Semua Ulasan',
+            style: TextStyle(
+              color: AppColors.primaryBlue,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapseButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showAllReviews = false;
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFD),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE7EEF7)),
+        ),
+        child: const Center(
+          child: Text(
+            'Tutup Ulasan',
+            style: TextStyle(
+              color: AppColors.primaryBlue,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -385,23 +537,35 @@ class _Spec extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           margin: const EdgeInsets.only(right: 8),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.field,
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: AppColors.border),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.primaryBlue.withOpacity(0.12)),
           ),
           child: Column(
             children: [
-              Icon(icon, color: AppColors.primaryBlue),
-              const SizedBox(height: 5),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+              Icon(icon, color: AppColors.primaryBlue, size: 22),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 2),
               Text(
                 caption,
-                style: const TextStyle(fontSize: 9, color: AppColors.muted),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.muted,
+                ),
               ),
             ],
           ),
@@ -455,17 +619,9 @@ class _ReviewPhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visiblePhotos = photos.take(3).toList();
+    final visiblePhotos = photos.take(2).toList();
 
-    if (visiblePhotos.isEmpty) {
-      return Row(
-        children: [
-          _placeholder(),
-          const SizedBox(width: 8),
-          _placeholder(),
-        ],
-      );
-    }
+    if (visiblePhotos.isEmpty) return const SizedBox.shrink();
 
     return Row(
       children: [
@@ -477,7 +633,11 @@ class _ReviewPhotos extends StatelessWidget {
               width: 50,
               height: 50,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _placeholder(),
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 50,
+                height: 50,
+                color: Colors.grey[200],
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -485,140 +645,334 @@ class _ReviewPhotos extends StatelessWidget {
       ],
     );
   }
-
-  Widget _placeholder() {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        color: Colors.grey[200],
-      ),
-    );
-  }
 }
 
-class _AllReviewsPage extends StatelessWidget {
-  const _AllReviewsPage();
+class _MockMapView extends StatelessWidget {
+  const _MockMapView();
 
   @override
   Widget build(BuildContext context) {
-    final reviews = [
-      {
-        'name': 'Jane Doe',
-        'rating': 4.8,
-        'text':
-            'Kamar nyaman, pelayanan ramah, dan pemandangan bagus. Puas dengan kualitas fasilitas.',
-      },
-      {
-        'name': 'Ahmad Riski',
-        'rating': 4.5,
-        'text':
-            'Staf sangat puas menangani silhouetti. Lifewalking strategi, detail, ruang bersih. Sarapan lezat. Harga terjangkau. Akan datang lagi dengan keluarga',
-      },
-      {
-        'name': 'Joko Rina',
-        'rating': 4.7,
-        'text':
-            'Pemandangan laut yang sunyi tidak menggangu, kamar dengan AC yang dingin. Pelayanan staff sangat memuaskan, sarapan enak, parkir luas.',
-      },
-      {
-        'name': 'Siti Nurhaliza',
-        'rating': 4.9,
-        'text':
-            'Pengalaman menginap yang luar biasa! Fasilitas lengkap, staf ramah, kamar bersih dan nyaman. Pasti akan datang lagi.',
-      },
-      {
-        'name': 'Bambang Sutrisno',
-        'rating': 4.6,
-        'text': 'Lokasi strategis, harga terjangkau, pelayanan memuaskan. Cocok untuk liburan keluarga.',
-      },
-    ];
-
-    return Scaffold(
-      appBar: const CustomAppBar(title: 'Semua Ulasan'),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
-        children: [
-          for (int i = 0; i < reviews.length; i++) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(9),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: .05),
-                    blurRadius: 12,
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEBEAE6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0DFDA)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: Stack(
+          children: [
+            // Vertical Road
+            Positioned(
+              left: 110,
+              top: 0,
+              bottom: 0,
+              width: 34,
+              child: Container(color: Colors.white),
+            ),
+            // Horizontal Road
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 76,
+              height: 34,
+              child: Container(color: Colors.white),
+            ),
+            // Text: "JL. TEMBOK BAYAN"
+            Positioned(
+              left: 123,
+              top: 10,
+              child: RotatedBox(
+                quarterTurns: 1,
+                child: Text(
+                  'JL. TEMBOK BAYAN',
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 7,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
                   ),
-                ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Color(0xFFD8A15F),
-                        child: Icon(Icons.person, size: 24, color: Colors.white),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              reviews[i]['name'] as String,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            RatingWidget(rating: _asDouble(reviews[i]['rating'])),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    reviews[i]['text'] as String,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      height: 1.45,
-                      color: AppColors.muted,
+            ),
+            // Text: "ABARSARI"
+            Positioned(
+              left: 154,
+              top: 89,
+              child: Text(
+                'ABARSARI',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 7,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+            // Card 1: Food Court (top right)
+            Positioned(
+              left: 164,
+              top: 32,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFD),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.restaurant, color: Colors.green, size: 10),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Food Court',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 6,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Card 2: Supermarket (bottom right)
+            Positioned(
+              left: 184,
+              top: 124,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFD),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.shopping_cart, color: Colors.orange, size: 10),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Supermarket',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 6,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Card 3: Puskesmas Transit (top left)
+            Positioned(
+              left: 28,
+              top: 32,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFD),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.local_hospital_outlined, color: Colors.grey[400], size: 10),
+                    const SizedBox(width: 4),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Puskesmas',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 6,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Transit',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Blue pin in center (intersection) and white dot
+            Positioned(
+              left: 111,
+              top: 114,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    color: AppColors.primaryBlue,
+                    size: 36,
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          color: Colors.grey[200],
-                        ),
+                  Positioned(
+                    top: 9,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          color: Colors.grey[200],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-            if (i < reviews.length - 1) const SizedBox(height: 12),
+            // Grand Palace Hotel blue badge
+            Positioned(
+              left: 68,
+              top: 68,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Grand Palace Hotel',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            // Satellite button on bottom left
+            Positioned(
+              left: 12,
+              bottom: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'PETA SATELIT AKTIF',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 7,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            // Target location button on top right
+            Positioned(
+              right: 12,
+              top: 12,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.my_location, size: 14, color: AppColors.primaryBlue),
+              ),
+            ),
+            // Zoom buttons on bottom right
+            Positioned(
+              right: 12,
+              bottom: 48,
+              child: Container(
+                width: 28,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 4),
+                    const Icon(Icons.add, size: 14, color: Colors.grey),
+                    Divider(height: 8, color: Colors.grey[200]),
+                    const Icon(Icons.remove, size: 14, color: Colors.grey),
+                    const SizedBox(height: 4),
+                  ],
+                ),
+              ),
+            ),
+            // Layers button on bottom right
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.layers_outlined, size: 14, color: Colors.grey),
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }

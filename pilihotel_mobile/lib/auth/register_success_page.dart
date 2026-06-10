@@ -11,7 +11,7 @@ class RegisterSuccessPage extends StatelessWidget {
   Widget build(BuildContext context) => SuccessScaffold(
     title: 'Pendaftaran Berhasil!',
     message:
-        'Akun Anda telah berhasil dibuat. Selamat bergabung dengan PiliHotel.',
+        'Akun Anda telah berhasil dibuat. Selamat bergabung dengan PiliHotel!',
     button: 'Kembali ke Login',
     onPressed: () => Navigator.pushAndRemoveUntil(
       context,

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
 import '../core/services/auth_service.dart';
-import '../core/widgets/bottom_navbar.dart';
 import '../core/widgets/custom_textfield.dart';
 import '../core/widgets/logo.dart';
 import '../core/widgets/primary_button.dart';
 import 'register_page.dart';
 import 'otp_page.dart';
+import 'login_success_page.dart';
 
 /// Custom route transition with fade and slide animation
 Route _route(Widget page) => PageRouteBuilder(
@@ -64,30 +64,46 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.fromLTRB(28, 34, 28, 20),
           child: Column(
             children: [
-              const PiliLogo(size: 58),
-              const SizedBox(height: 10),
+              const PiliLogoCard(size: 80),
+              const SizedBox(height: 14),
               const Text(
                 'PiliHotel',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E293B),
+                ),
               ),
               const Text(
                 'Tingkatkan pengalaman perjalanan Anda',
-                style: TextStyle(fontSize: 10, color: AppColors.muted),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted,
+                ),
               ),
               const SizedBox(height: 28),
               const Text(
                 'Selamat Datang',
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E293B),
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text(
                 'Silakan masukkan detail Anda untuk masuk',
-                style: TextStyle(fontSize: 11, color: AppColors.muted),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted,
+                ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 28),
               CustomTextField(
                 label: 'Alamat Email',
-                hint: 'contoh@hotmail.com',
+                hint: 'contoh@hotelmail.com',
                 icon: Icons.mail_outline,
                 errorText: emailError,
                 onChanged: (v) => setState(() {
@@ -98,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 14),
               CustomTextField(
                 label: 'Kata Sandi',
-                hint: 'Minimal 6 karakter',
+                hint: '******',
                 icon: Icons.lock_outline,
                 obscure: hidden,
                 errorText: passwordError,
@@ -122,7 +138,11 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () => showOtpSheet(context),
                   child: const Text(
                     'Lupa Kata Sandi?',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
                 ),
               ),
@@ -160,25 +180,41 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              OutlinedButton.icon(
+              OutlinedButton(
                 onPressed: loading ? null : _loginWithGoogle,
-                icon: const Text(
-                  'G',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                label: const Text(
-                  'Masuk dengan Google',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                ),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 46),
+                  minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   side: const BorderSide(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.network(
+                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/24px-Google_%22G%22_logo.svg.png',
+                      width: 16,
+                      height: 16,
+                      errorBuilder: (context, error, stackTrace) => const Text(
+                        'G',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Masuk dengan Google',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 18),
@@ -186,10 +222,19 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Belum punya akun?',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                    'Belum punya akun? ',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.muted,
+                    ),
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     onPressed: () =>
                         Navigator.push(context, _route(const RegisterPage())),
                     child: const Text(
@@ -197,6 +242,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
+                        color: AppColors.primaryBlue,
                       ),
                     ),
                   ),
@@ -228,9 +274,10 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => loading = false);
 
     if (result['success'] == true) {
+      final String name = (result['user'] as dynamic)?.name ?? 'Andi';
       Navigator.pushAndRemoveUntil(
         context,
-        _route(const MainShell()),
+        _route(LoginSuccessPage(userName: name)),
         (_) => false,
       );
     } else {
@@ -250,16 +297,105 @@ class _LoginPageState extends State<LoginPage> {
 
     if (!mounted) return;
 
-    setState(() => loading = false);
-
     if (result['success'] == true) {
+      setState(() => loading = false);
+      final String name = (result['user'] as dynamic)?.name ?? 'Andi';
       Navigator.pushAndRemoveUntil(
         context,
-        _route(const MainShell()),
+        _route(LoginSuccessPage(userName: name)),
         (_) => false,
+      );
+    } else if (result['needs_mock'] == true) {
+      setState(() => loading = false);
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return Dialog(
+            backgroundColor: Colors.white,
+            elevation: 6,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircleAvatar(
+                    radius: 26,
+                    backgroundColor: Color(0xFFEFF6FF),
+                    child: Icon(Icons.g_mobiledata_rounded, color: AppColors.primaryBlue, size: 44),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Simulasi Google Sign-In',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.text),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Sertifikat SHA-1 belum terdaftar di Firebase untuk perangkat ini (ApiException 10).\n\nApakah Anda ingin masuk menggunakan akun Google simulasi untuk demo/pengujian local?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11.5, color: AppColors.muted, height: 1.45),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            setState(() => loading = true);
+                            
+                            final mockResult = await _authService.loginWithMockGoogle();
+                            
+                            if (!context.mounted) return;
+                            setState(() => loading = false);
+                            
+                            if (mockResult['success'] == true) {
+                              final String name = (mockResult['user'] as dynamic)?.name ?? 'Andi';
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                _route(LoginSuccessPage(userName: name)),
+                                (_) => false,
+                              );
+                            } else {
+                              setState(() {
+                                loginErrorMessage = mockResult['message']?.toString() ?? 'Login Google gagal';
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Ya, Masuk'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       );
     } else {
       setState(() {
+        loading = false;
         loginErrorMessage = result['message']?.toString() ?? 'Login Google gagal';
       });
     }

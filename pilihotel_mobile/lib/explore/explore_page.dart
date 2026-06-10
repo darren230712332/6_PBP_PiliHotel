@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../core/colors.dart';
 import '../core/models/hotel.dart' as api;
 import '../core/services/hotel_service.dart';
+import '../core/widgets/custom_dialog.dart';
 import '../core/widgets/hotel_card.dart';
-import '../core/widgets/logo.dart';
-import '../core/widgets/rating_widget.dart';
 import '../location/location_service.dart';
 import 'select_room_page.dart';
 import 'nearby_hotel_page.dart';
@@ -22,7 +22,13 @@ class _ExplorePageState extends State<ExplorePage> {
   final HotelService _hotelService = HotelService();
   final LocationService _locationService = LocationService();
   late final Future<List<api.Hotel>> _hotelsFuture = _hotelService.getHotels();
-  late final Future<UserLocation> _locationFuture = _locationService.currentLocation();
+  Future<UserLocation>? _locationFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _locationFuture = _locationService.currentLocation();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +105,11 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
+  String _formatPrice(int price) {
+    final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return 'Rp${price.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
+  }
+
   /// Transform API Hotel objects to UI Hotel objects
   List<UiHotel> _transformHotels(List<api.Hotel> apiHotels) {
     return apiHotels
@@ -106,17 +117,38 @@ class _ExplorePageState extends State<ExplorePage> {
           (hotel) => UiHotel(
             name: hotel.name,
             location: hotel.location,
-            price: 'Rp${hotel.pricePerNight}',
+            price: _formatPrice(hotel.pricePerNight),
             rating: hotel.rating,
-            image: hotel.image,
+            image: _mapHotelImageKey(hotel.name, hotel.image),
             distance: hotel.distance,
           ),
         )
         .toList();
   }
 
+  String _mapHotelImageKey(String hotelName, String originalKey) {
+    if (hotelName.contains('Grand Palace')) return 'sea';
+    if (hotelName.contains('Urban Stay')) return 'modern';
+    if (hotelName.contains('Sea Breeze')) return 'pool';
+    if (hotelName.contains('The Heritage') || hotelName.contains('Heritage')) return 'corridor';
+    return originalKey;
+  }
+
   /// Build the main hotel list view
   Widget _buildHotelList(BuildContext context, List<UiHotel> hotels) {
+    final featuredHotels = <UiHotel>[];
+    final popularHotels = <UiHotel>[];
+
+    if (hotels.isNotEmpty) {
+      final grandPalace = hotels.firstWhere((h) => h.name.contains('Grand Palace'), orElse: () => hotels[0]);
+      final urbanStay = hotels.firstWhere((h) => h.name.contains('Urban Stay'), orElse: () => hotels.length > 1 ? hotels[1] : hotels[0]);
+      final seaBreeze = hotels.firstWhere((h) => h.name.contains('Sea Breeze'), orElse: () => hotels.length > 2 ? hotels[2] : hotels[0]);
+      final heritage = hotels.firstWhere((h) => h.name.contains('The Heritage') || h.name.contains('Heritage'), orElse: () => hotels.length > 3 ? hotels[3] : hotels[0]);
+
+      featuredHotels.addAll([grandPalace, urbanStay]);
+      popularHotels.addAll([seaBreeze, heritage]);
+    }
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 26, 22, 96),
       children: [
@@ -128,11 +160,11 @@ class _ExplorePageState extends State<ExplorePage> {
         const SizedBox(height: 34),
         const _SectionTitle(title: 'Rekomendasi Hotel'),
         const SizedBox(height: 16),
-        _buildFeaturedHotels(context, hotels),
+        _buildFeaturedHotels(context, featuredHotels),
         const SizedBox(height: 22),
         const _SectionTitle(title: 'Hotel Populer'),
         const SizedBox(height: 14),
-        _buildPopularHotels(context, hotels),
+        _buildPopularHotels(context, popularHotels),
       ],
     );
   }
@@ -141,10 +173,23 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget _buildTopBar() {
     return Row(
       children: [
-        const PiliLogo(
-          size: 28,
-          showText: true,
-          textColor: AppColors.primaryBlue,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            'assets/images/logo.jpg',
+            width: 32,
+            height: 32,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(width: 8),
+        const Text(
+          'PiliHotel',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: AppColors.primaryBlue,
+          ),
         ),
         const Spacer(),
         Container(
@@ -194,23 +239,20 @@ class _ExplorePageState extends State<ExplorePage> {
                   color: AppColors.primaryBlue,
                 ),
                 const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    locationLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
+                Text(
+                  locationLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.muted,
-                  ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.muted,
+                  size: 20,
                 ),
               ],
             );
@@ -260,8 +302,8 @@ class _ExplorePageState extends State<ExplorePage> {
         ),
         const SizedBox(width: 12),
         Container(
-          width: 52,
-          height: 52,
+          width: 54,
+          height: 54,
           decoration: BoxDecoration(
             color: AppColors.primaryBlue,
             borderRadius: BorderRadius.circular(14),
@@ -274,11 +316,11 @@ class _ExplorePageState extends State<ExplorePage> {
             ],
           ),
           child: IconButton(
-            onPressed: () => _showLocationPermission(context),
+            onPressed: () => _handleLocationButtonPressed(context),
             icon: const Icon(
               Icons.location_on_outlined,
               color: Colors.white,
-              size: 24,
+              size: 22,
             ),
           ),
         ),
@@ -294,7 +336,7 @@ class _ExplorePageState extends State<ExplorePage> {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         children: [
-          for (final hotel in hotels.take(3))
+          for (final hotel in hotels)
             _FeaturedHotelCard(
               hotel: hotel,
               width: 224,
@@ -309,11 +351,11 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget _buildPopularHotels(BuildContext context, List<UiHotel> hotels) {
     return Column(
       children: [
-        for (final hotel in hotels.take(2))
+        for (final hotel in hotels)
           _PopularHotelCard(
             hotel: hotel,
             distance: hotel.distance,
-            reviewCount: '${(hotel.rating * 250).round()}',
+            reviewCount: hotel.name.contains('Sea Breeze') ? '1.2rb' : '850',
             onTap: () => _openDetail(context, hotel),
           ),
       ],
@@ -327,20 +369,266 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  Future<void> _showLocationPermission(BuildContext context) async {
-    final granted = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: .45),
-      builder: (_) => const _LocationPermissionDialog(),
-    );
+  Future<void> _handleLocationButtonPressed(BuildContext context) async {
+    final currentPermission = await Geolocator.checkPermission();
+    final isGranted = currentPermission == LocationPermission.always || 
+                      currentPermission == LocationPermission.whileInUse;
 
-    if (granted == true && context.mounted) {
-      Navigator.push(
+    LocationPermission? finalPermission;
+
+    if (!isGranted) {
+      if (!context.mounted) return;
+      finalPermission = await showCustomLocationPermissionDialog(context);
+    } else {
+      finalPermission = currentPermission;
+    }
+
+    if (finalPermission == null) return;
+
+    if (finalPermission == LocationPermission.always || 
+        finalPermission == LocationPermission.whileInUse) {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        if (!context.mounted) return;
+        showPiliDialog(
+          context,
+          icon: Icons.location_off_outlined,
+          title: 'Layanan Lokasi Mati',
+          message: 'Silakan aktifkan layanan lokasi (GPS) pada perangkat Anda.',
+          buttonText: 'Pengaturan',
+          onPressed: () async {
+            Navigator.pop(context);
+            await Geolocator.openLocationSettings();
+          },
+          color: AppColors.warning,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _locationFuture = _locationService.currentLocation();
+      });
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const NearbyHotelPage()),
+        );
+      }
+    } else if (finalPermission == LocationPermission.deniedForever) {
+      if (!context.mounted) return;
+      showPiliDialog(
         context,
-        MaterialPageRoute(builder: (_) => const NearbyHotelPage()),
+        icon: Icons.location_off_outlined,
+        title: 'Izin Lokasi Ditolak Permanen',
+        message: 'Aplikasi memerlukan izin lokasi. Silakan aktifkan di pengaturan aplikasi.',
+        buttonText: 'Pengaturan',
+        onPressed: () async {
+          Navigator.pop(context);
+          await Geolocator.openAppSettings();
+        },
+        color: AppColors.warning,
+      );
+    } else {
+      if (!context.mounted) return;
+      showPiliDialog(
+        context,
+        icon: Icons.location_off_outlined,
+        title: 'Izin Lokasi Ditolak',
+        message: 'Aplikasi memerlukan izin lokasi Anda untuk mencari hotel terdekat.',
+        buttonText: 'Tutup',
+        color: AppColors.warning,
       );
     }
   }
+}
+
+Future<LocationPermission?> showCustomLocationPermissionDialog(BuildContext context) {
+  return showDialog<LocationPermission>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircleAvatar(
+                radius: 28,
+                backgroundColor: Color(0xFFEAF4FF),
+                child: Icon(
+                  Icons.location_on,
+                  color: AppColors.primaryBlue,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Izinkan PiliHotel mengakses lokasi perangkat ini?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E293B),
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Kami menggunakan lokasi Anda untuk menemukan hotel terdekat dan memberikan penawaran terbaik di sekitar Anda.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(double.infinity, 120),
+                        painter: _MapGridPainter(),
+                      ),
+                      Container(
+                        width: 14,
+                        height: 14,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0F52BA),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _dialogDivider(),
+              _dialogButton(
+                text: 'Saat Aplikasi Digunakan',
+                color: AppColors.primaryBlue,
+                bold: true,
+                onTap: () async {
+                  try {
+                    final permission = await Geolocator.requestPermission();
+                    if (context.mounted) {
+                      Navigator.pop(context, permission);
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      Navigator.pop(context, LocationPermission.denied);
+                    }
+                  }
+                },
+              ),
+              _dialogDivider(),
+              _dialogButton(
+                text: 'Hanya Sekali',
+                color: const Color(0xFF475569),
+                bold: false,
+                onTap: () async {
+                  try {
+                    final permission = await Geolocator.requestPermission();
+                    if (context.mounted) {
+                      Navigator.pop(context, permission);
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      Navigator.pop(context, LocationPermission.denied);
+                    }
+                  }
+                },
+              ),
+              _dialogDivider(),
+              _dialogButton(
+                text: 'Jangan Izinkan',
+                color: const Color(0xFFDC2626),
+                bold: false,
+                onTap: () {
+                  Navigator.pop(context, LocationPermission.denied);
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _dialogDivider() {
+  return Container(
+    height: 1,
+    width: double.infinity,
+    color: const Color(0xFFF1F5F9),
+  );
+}
+
+Widget _dialogButton({
+  required String text,
+  required Color color,
+  required bool bold,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 13,
+          fontWeight: bold ? FontWeight.w900 : FontWeight.w600,
+        ),
+      ),
+    ),
+  );
+}
+
+class _MapGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.5)
+      ..strokeWidth = 2.0;
+
+    canvas.drawLine(Offset(0, size.height * 0.4), Offset(size.width, size.height * 0.5), paint);
+    canvas.drawLine(Offset(size.width * 0.3, 0), Offset(size.width * 0.4, size.height), paint);
+    canvas.drawLine(Offset(size.width * 0.7, 0), Offset(size.width * 0.6, size.height), paint);
+    canvas.drawLine(Offset(0, size.height * 0.75), Offset(size.width, size.height * 0.7), paint);
+    canvas.drawLine(Offset(0, size.height * 0.15), Offset(size.width, size.height * 0.1), paint);
+    canvas.drawLine(Offset(size.width * 0.1, 0), Offset(size.width * 0.2, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -379,7 +667,12 @@ class _FeaturedHotelCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              HotelImage(kind: hotel.image, height: 168, width: width),
+              HotelImage(
+                kind: hotel.image,
+                height: 168,
+                width: width,
+                borderRadius: BorderRadius.circular(16),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -396,14 +689,32 @@ class _FeaturedHotelCard extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
+                      horizontal: 8,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF5D8),
-                      borderRadius: BorderRadius.circular(18),
+                      color: const Color(0xFFFFF9E6),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: RatingWidget(rating: hotel.rating, size: 14),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFFFB84D),
+                          size: 13,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          hotel.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFFFB84D),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -449,17 +760,23 @@ class _PopularHotelCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F3F6)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: .05),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: .04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
-            HotelImage(kind: hotel.image, height: 88, width: 98),
+            HotelImage(
+              kind: hotel.image,
+              height: 88,
+              width: 98,
+              borderRadius: BorderRadius.circular(12),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -467,29 +784,86 @@ class _PopularHotelCard extends StatelessWidget {
                 children: [
                   Text(
                     hotel.name,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.text,
+                    ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    hotel.location,
-                    style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                  Row(
+                    children: [
+                      const Text(
+                        'Yogyakarta, Indonesia',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Text(
+                        ' • ',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      Text(
+                        distance,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.primaryBlue,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '$distance • $reviewCount ulasan',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                  Row(
+                    children: [
+                      const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${hotel.rating}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '($reviewCount ulasan)',
+                        style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                      ),
+                      const Spacer(),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: hotel.price,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: '/mlm',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                color: AppColors.muted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF5D8),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: RatingWidget(rating: hotel.rating, size: 14),
-            ),
           ],
         ),
       ),
@@ -497,56 +871,4 @@ class _PopularHotelCard extends StatelessWidget {
   }
 }
 
-class _LocationPermissionDialog extends StatelessWidget {
-  const _LocationPermissionDialog();
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircleAvatar(
-              radius: 30,
-              backgroundColor: Color(0xFFEAF4FF),
-              child: Icon(Icons.location_on_outlined, color: AppColors.primaryBlue, size: 30),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Izinkan akses lokasi',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Kami akan mencari hotel yang paling dekat dari posisi Anda saat ini.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: AppColors.muted, height: 1.45),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Batal'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Izinkan'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

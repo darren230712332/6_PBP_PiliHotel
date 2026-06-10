@@ -28,11 +28,15 @@ class SuccessScaffold extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 28),
-              const PiliLogo(size: 64),
-              const SizedBox(height: 12),
+              const PiliLogoCard(size: 80),
+              const SizedBox(height: 14),
               const Text(
                 'PiliHotel',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.text,
+                ),
               ),
               const Spacer(),
               Text(
@@ -57,6 +61,7 @@ class SuccessScaffold extends StatelessWidget {
               PrimaryButton(
                 text: button,
                 icon: Icons.arrow_forward,
+                iconOnRight: true,
                 onPressed: onPressed,
               ),
               const Spacer(flex: 2),

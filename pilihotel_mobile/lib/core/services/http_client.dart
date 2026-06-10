@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+// ignore: depend_on_referenced_packages
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/api_constants.dart';
@@ -21,6 +23,11 @@ import '../exceptions/api_exceptions.dart';
 ///   flutter run --dart-define=API_BASE_URL=http://<YOUR_MAC_IP>:8000/api
 ///   Or simply run: ./run.sh  (auto-detects Mac IP)
 class HttpClient {
+  static String get serverUrl {
+    final api = _baseUrl;
+    return api.endsWith('/api') ? api.substring(0, api.length - 4) : api;
+  }
+
   static String get _baseUrl {
     // 1. Highest priority: explicit override via --dart-define
     const envBaseUrl = String.fromEnvironment('API_BASE_URL');
@@ -45,6 +52,33 @@ class HttpClient {
 
     // 5. Fallback (macOS/Linux/Windows desktop)
     return 'http://127.0.0.1:8000/api';
+  }
+
+  static String get baseUrl => _baseUrl;
+
+  /// Formats/rewrites asset URLs from backend (replaces localhost/127.0.0.1/10.0.2.2 with actual host)
+  static String? formatAssetUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    
+    // If it's already a relative path, prepend server root
+    final serverRoot = baseUrl.replaceAll('/api', '');
+    if (url.startsWith('/')) {
+      return '$serverRoot$url';
+    }
+    
+    // If it's an absolute URL containing localhost/127.0.0.1/10.0.2.2, replace with the current active API host
+    if (url.contains('localhost') || url.contains('127.0.0.1') || url.contains('10.0.2.2')) {
+      try {
+        final uri = Uri.parse(url);
+        final activeApiUri = Uri.parse(baseUrl);
+        final portString = activeApiUri.hasPort ? ':${activeApiUri.port}' : '';
+        return '${activeApiUri.scheme}://${activeApiUri.host}$portString${uri.path}';
+      } catch (_) {
+        return url;
+      }
+    }
+    
+    return url;
   }
 
   static final HttpClient _instance = HttpClient._internal();
@@ -161,19 +195,28 @@ class HttpClient {
     String method,
     String endpoint,
   ) async {
+    final url = '$_baseUrl$endpoint';
+    print('DEBUG_HTTP: [HTTP REQUEST] $method $url');
     try {
       final response = await requestFn.call().timeout(
             ApiTimeouts.defaultTimeout,
-            onTimeout: () => throw TimeoutException(),
+            onTimeout: () {
+              print('DEBUG_HTTP: [HTTP TIMEOUT] $method $url exceeded 30 seconds');
+              throw TimeoutException();
+            },
           );
 
+      print('DEBUG_HTTP: [HTTP RESPONSE] $method $url -> Status: ${response.statusCode}');
       _handleResponse(response, method, endpoint);
       return response;
-    } on ApiException {
+    } on TimeoutException catch (e) {
+      print('DEBUG_HTTP: [HTTP TIMEOUT ERROR] $method $url -> Timeout');
       rethrow;
-    } on TimeoutException {
+    } on ApiException catch (e) {
+      print('DEBUG_HTTP: [HTTP API ERROR] $method $url -> Error: $e');
       rethrow;
     } catch (e) {
+      print('DEBUG_HTTP: [HTTP UNEXPECTED ERROR] $method $url -> Error: $e');
       throw NetworkException(e.toString());
     }
   }
@@ -242,7 +285,27 @@ class HttpClient {
 
   /// Helper method to extract filename from file path
   String _getFilename(String filePath) {
-    return filePath.split('/').last;
+    return filePath.split(RegExp(r'[/\\]')).last;
+  }
+
+  /// Helper method to determine MediaType from filename extension
+  MediaType? _getMediaType(String filename) {
+    final ext = filename.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return MediaType('image', 'jpeg');
+      case 'png':
+        return MediaType('image', 'png');
+      case 'gif':
+        return MediaType('image', 'gif');
+      case 'webp':
+        return MediaType('image', 'webp');
+      case 'pdf':
+        return MediaType('application', 'pdf');
+      default:
+        return null;
+    }
   }
 
   /// Upload file using multipart/form-data
@@ -260,41 +323,46 @@ class HttpClient {
     final uri = Uri.parse('$_baseUrl$endpoint');
     final request = http.MultipartRequest('POST', uri);
 
+    print('DEBUG_UPLOAD: Starting uploadFile to: $uri');
+    request.headers['Accept'] = HttpHeaders.accept;
     if (token != null) {
       request.headers['Authorization'] =
           '${HttpHeaders.authorizationBearer} $token';
     }
 
     try {
-      if (kIsWeb) {
-        // For web, read file as bytes
-        final fileBytes = await file.readAsBytes();
-        final filename = _getFilename(file.path);
-        request.files.add(http.MultipartFile.fromBytes(
-          fieldName,
-          fileBytes,
-          filename: filename,
-        ));
-      } else {
-        // For mobile, use file path
-        request.files.add(
-          await http.MultipartFile.fromPath(fieldName, file.path),
-        );
-      }
+      print('DEBUG_UPLOAD: Reading file bytes for path: ${file.path} ...');
+      final fileBytes = await file.readAsBytes();
+      print('DEBUG_UPLOAD: File bytes read successfully. Size: ${fileBytes.length} bytes');
+      
+      final filename = _getFilename(file.path);
+      request.files.add(http.MultipartFile.fromBytes(
+        fieldName,
+        fileBytes,
+        filename: filename,
+        contentType: _getMediaType(filename),
+      ));
 
+      print('DEBUG_UPLOAD: Sending MultipartRequest...');
       final streamed = await request.send().timeout(
             ApiTimeouts.uploadTimeout,
             onTimeout: () => throw TimeoutException(),
           );
+      print('DEBUG_UPLOAD: Response stream received. Status: ${streamed.statusCode}');
+      
       final response = await http.Response.fromStream(streamed);
+      print('DEBUG_UPLOAD: Response body: ${response.body}');
 
       _handleResponse(response, 'POST', endpoint);
       return response;
-    } on ApiException {
+    } on TimeoutException catch (e) {
+      print('DEBUG_UPLOAD: TimeoutException caught: $e');
       rethrow;
-    } on TimeoutException {
+    } on ApiException catch (e) {
+      print('DEBUG_UPLOAD: ApiException caught: $e');
       rethrow;
     } catch (e) {
+      print('DEBUG_UPLOAD: Unexpected error caught: $e');
       throw NetworkException('Upload failed: ${e.toString()}');
     }
   }
@@ -313,6 +381,7 @@ class HttpClient {
     final uri = Uri.parse('$_baseUrl$endpoint');
     final request = http.MultipartRequest('POST', uri);
 
+    request.headers['Accept'] = HttpHeaders.accept;
     if (token != null) {
       request.headers['Authorization'] =
           '${HttpHeaders.authorizationBearer} $token';
@@ -323,21 +392,14 @@ class HttpClient {
     try {
       for (final entry in files.entries) {
         for (final file in entry.value) {
-          if (kIsWeb) {
-            // For web, read file as bytes
-            final fileBytes = await file.readAsBytes();
-            final filename = _getFilename(file.path);
-            request.files.add(http.MultipartFile.fromBytes(
-              entry.key,
-              fileBytes,
-              filename: filename,
-            ));
-          } else {
-            // For mobile, use file path
-            request.files.add(
-              await http.MultipartFile.fromPath(entry.key, file.path),
-            );
-          }
+          final fileBytes = await file.readAsBytes();
+          final filename = _getFilename(file.path);
+          request.files.add(http.MultipartFile.fromBytes(
+            entry.key,
+            fileBytes,
+            filename: filename,
+            contentType: _getMediaType(filename),
+          ));
         }
       }
 
@@ -349,9 +411,9 @@ class HttpClient {
 
       _handleResponse(response, 'POST', endpoint);
       return response;
-    } on ApiException {
-      rethrow;
     } on TimeoutException {
+      rethrow;
+    } on ApiException {
       rethrow;
     } catch (e) {
       throw NetworkException('Upload failed: ${e.toString()}');
@@ -374,6 +436,7 @@ class HttpClient {
     final uri = Uri.parse('$_baseUrl$endpoint');
     final request = http.MultipartRequest('POST', uri);
 
+    request.headers['Accept'] = HttpHeaders.accept;
     if (token != null) {
       request.headers['Authorization'] =
           '${HttpHeaders.authorizationBearer} $token';
@@ -384,6 +447,7 @@ class HttpClient {
         fieldName,
         bytes,
         filename: filename,
+        contentType: _getMediaType(filename),
       ));
 
       final streamed = await request.send().timeout(
@@ -394,9 +458,9 @@ class HttpClient {
 
       _handleResponse(response, 'POST', endpoint);
       return response;
-    } on ApiException {
-      rethrow;
     } on TimeoutException {
+      rethrow;
+    } on ApiException {
       rethrow;
     } catch (e) {
       throw NetworkException('Upload failed: ${e.toString()}');

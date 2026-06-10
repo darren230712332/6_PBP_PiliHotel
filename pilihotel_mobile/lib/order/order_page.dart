@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../booking/payment_success_page.dart';
 import '../core/colors.dart';
 import '../core/widgets/custom_dialog.dart';
 import '../core/widgets/hotel_card.dart';
@@ -17,14 +18,35 @@ class OrderPage extends StatefulWidget {
 
 class _OrderPageState extends State<OrderPage> {
   final BookingService _bookingService = BookingService();
-  late final Future<List<api.Booking>> _bookingsFuture = _bookingService.getBookings();
+  Future<List<api.Booking>>? _bookingsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshBookings();
+  }
+
+  void _refreshBookings() {
+    setState(() {
+      _bookingsFuture = _bookingService.getBookings();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pesanan Saya'),
-        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Pesanan Saya',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.text),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text, size: 18),
+          onPressed: () => Navigator.maybePop(context),
+        ),
       ),
       body: FutureBuilder<List<api.Booking>>(
         future: _bookingsFuture,
@@ -46,53 +68,87 @@ class _OrderPageState extends State<OrderPage> {
 
           final orders = bookings
               .map(
-                (booking) => _Order(
-                  bookingId: booking.id,
-                  code: booking.bookingCode,
-                  hotelName: booking.hotel?.name ?? 'Hotel',
-                  date: '${booking.checkIn.day} ${_month(booking.checkIn.month)} - ${booking.checkOut.day} ${_month(booking.checkOut.month)}',
-                  duration: '${booking.nights} Malam',
-                  status: booking.status,
-                  statusColor: booking.paymentStatus == 'paid' ? AppColors.success : AppColors.muted,
-                  image: booking.hotel?.image ?? 'bed',
-                  canReview: booking.paymentStatus == 'paid' && booking.checkOut.isBefore(DateTime.now()),
-                ),
+                (booking) {
+                  final isCompleted = booking.paymentStatus == 'paid' && booking.checkOut.isBefore(DateTime.now());
+                  final displayStatus = isCompleted ? 'Selesai Menginap' : booking.status;
+                  Color displayColor = AppColors.muted;
+                  if (isCompleted) {
+                    displayColor = AppColors.success;
+                  } else if (booking.status == 'Menunggu Check-in') {
+                    displayColor = AppColors.muted;
+                  } else if (booking.status == 'Menunggu Pembayaran') {
+                    displayColor = AppColors.warning;
+                  }
+
+                  return _Order(
+                    bookingId: booking.id,
+                    code: booking.bookingCode,
+                    hotelName: booking.hotel?.name ?? 'Hotel',
+                    date: '${booking.checkIn.day} ${_month(booking.checkIn.month)} - ${booking.checkOut.day} ${_month(booking.checkOut.month)}',
+                    duration: '${booking.nights} Malam',
+                    status: displayStatus,
+                    statusColor: displayColor,
+                    image: booking.hotel?.image ?? 'bed',
+                    canReview: isCompleted,
+                    rawBooking: booking,
+                    review: booking.review,
+                  );
+                }
               )
               .toList();
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Status Pesanan',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+          return RefreshIndicator(
+            onRefresh: () async => _refreshBookings(),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Status Pesanan',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEAF4FF),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Text(
-                      '${orders.length} PESANAN',
-                      style: const TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF4FF),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Text(
+                        '${orders.length} PESANAN',
+                        style: const TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              for (final order in orders) _OrderCard(order: order),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 14),
+                if (orders.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 48),
+                      child: Text(
+                        'Belum ada pesanan.',
+                        style: TextStyle(color: AppColors.muted),
+                      ),
+                    ),
+                  )
+                else
+                  for (final order in orders)
+                    _OrderCard(
+                      order: order,
+                      onRefresh: _refreshBookings,
+                    ),
+              ],
+            ),
           );
         },
       ),
@@ -129,6 +185,8 @@ class _Order {
     required this.statusColor,
     required this.image,
     required this.canReview,
+    required this.rawBooking,
+    this.review,
   });
 
   final int bookingId;
@@ -140,12 +198,15 @@ class _Order {
   final Color statusColor;
   final String image;
   final bool canReview;
+  final api.Booking rawBooking;
+  final api.Review? review;
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order});
+  const _OrderCard({required this.order, required this.onRefresh});
 
   final _Order order;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -154,13 +215,13 @@ class _OrderCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: .04),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: .03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -169,19 +230,30 @@ class _OrderCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              HotelImage(kind: order.image, width: 88, height: 82),
+              HotelImage(kind: order.image, width: 80, height: 80),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'PESANAN ${order.code}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'PESANAN ${order.code}',
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        if (order.status == 'Menunggu Check-in')
+                          const Icon(
+                            Icons.verified,
+                            color: AppColors.primaryBlue,
+                            size: 14,
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -189,7 +261,7 @@ class _OrderCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -202,17 +274,34 @@ class _OrderCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(
-                          order.statusColor == AppColors.success
-                              ? Icons.check_circle_outline
-                              : Icons.circle,
-                          color: order.statusColor,
-                          size: 13,
-                        ),
-                        const SizedBox(width: 4),
+                        if (order.status == 'Menunggu Check-in') ...[
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppColors.muted,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ] else if (order.status == 'Menunggu Pembayaran') ...[
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.warning,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 4),
+                        ] else ...[
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: AppColors.success,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
                         Expanded(
                           child: Text(
                             order.status,
@@ -220,7 +309,7 @@ class _OrderCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: order.statusColor,
-                              fontSize: 10,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -232,46 +321,64 @@ class _OrderCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           SizedBox(
-            height: 38,
+            height: 44,
+            width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => showPiliDialog(
-                context,
-                icon: Icons.qr_code_2,
-                title: 'Bukti Pesanan',
-                message: 'Kode pesanan ${order.code} untuk ${order.hotelName}.',
-                buttonText: 'Tutup',
-                color: AppColors.primaryBlue,
-              ),
-              icon: const Icon(Icons.qr_code_2, size: 15),
-              label: const Text('Lihat Bukti'),
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PaymentSuccessPage(
+                      hotel: _toUiHotel(order.rawBooking),
+                      booking: order.rawBooking,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.qr_code_scanner, size: 16, color: Colors.white),
+              label: const Text(
+                'Lihat Bukti',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
                 ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _SoftButton(
-                  icon: Icons.rate_review_outlined,
+                  icon: Icons.edit_outlined,
                   label: 'Beri Ulasan',
                   color: AppColors.primaryBlue,
-                  onPressed: order.canReview ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReviewPage(
-                        bookingId: order.bookingId,
-                        hotelName: order.hotelName,
-                        stayInfo: '${order.date} • ${order.duration}',
-                        image: order.image,
+                  backgroundColor: const Color(0xFFEAF4FF),
+                  onPressed: order.canReview ? () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReviewPage(
+                          bookingId: order.bookingId,
+                          hotelName: order.hotelName,
+                          stayInfo: '${order.date} • ${order.duration}',
+                          image: order.image,
+                          existingReview: order.review,
+                        ),
                       ),
-                    ),
-                  ) : () => showPiliDialog(
+                    );
+                    onRefresh();
+                  } : () => showPiliDialog(
                     context,
                     icon: Icons.lock_clock_outlined,
                     title: 'Review Belum Tersedia',
@@ -281,21 +388,33 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 child: _SoftButton(
                   icon: Icons.visibility_outlined,
                   label: 'Lihat Ulasan',
-                  color: AppColors.text,
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReviewResultPage(
-                        hotelName: order.hotelName,
-                        stayInfo: '${order.date} • ${order.duration}',
-                        image: order.image,
+                  color: order.review != null ? AppColors.text.withValues(alpha: 0.8) : const Color(0xFF7A869A),
+                  backgroundColor: order.review != null ? const Color(0xFFF0F4F8) : const Color(0xFFF5F7FA),
+                  onPressed: order.review != null ? () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReviewResultPage(
+                          review: order.review!,
+                          hotelName: order.hotelName,
+                          stayInfo: '${order.date} • ${order.duration}',
+                          image: order.image,
+                        ),
                       ),
-                    ),
+                    );
+                    onRefresh();
+                  } : () => showPiliDialog(
+                    context,
+                    icon: Icons.info_outline,
+                    title: 'Belum Ada Ulasan',
+                    message: 'Anda belum memberikan ulasan untuk pesanan ini.',
+                    buttonText: 'Tutup',
+                    color: AppColors.primaryBlue,
                   ),
                 ),
               ),
@@ -312,29 +431,73 @@ class _SoftButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.color,
+    required this.backgroundColor,
     required this.onPressed,
   });
 
   final IconData icon;
   final String label;
   final Color color;
+  final Color backgroundColor;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      height: 44,
       child: TextButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, size: 14),
-        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        icon: Icon(icon, size: 16, color: color),
+        label: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
         style: TextButton.styleFrom(
-          foregroundColor: color,
-          backgroundColor: const Color(0xFFF0F6FE),
-          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: backgroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
       ),
     );
   }
+}
+
+UiHotel _toUiHotel(api.Booking booking) {
+  final hotel = booking.hotel;
+  if (hotel == null) {
+    return const UiHotel(
+      name: 'PiliHotel',
+      location: 'Yogyakarta, Indonesia',
+      price: 'Rp0',
+      rating: 4.5,
+      image: 'modern',
+      distance: '0 km',
+    );
+  }
+  String imageKey = 'modern';
+  final nameLower = hotel.name.toLowerCase();
+  if (nameLower.contains('grand palace')) imageKey = 'sea';
+  if (nameLower.contains('urban stay')) imageKey = 'modern';
+  if (nameLower.contains('sea breeze')) imageKey = 'pool';
+  if (nameLower.contains('sunset view')) imageKey = 'sunset';
+
+  final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+  final formattedPrice = 'Rp${hotel.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
+
+  return UiHotel(
+    name: hotel.name,
+    location: hotel.location,
+    price: formattedPrice,
+    rating: hotel.rating,
+    image: imageKey,
+    distance: hotel.distance,
+  );
 }

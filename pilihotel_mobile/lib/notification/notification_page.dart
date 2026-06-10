@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
-import '../review/review_page.dart';
+import '../core/widgets/custom_dialog.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -98,9 +98,13 @@ class NotificationPage extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           OutlinedButton(
-            onPressed: () => Navigator.push(
+            onPressed: () => showPiliDialog(
               context,
-              MaterialPageRoute(builder: (_) => const ReviewPage()),
+              icon: Icons.info_outline,
+              title: 'Tulis Ulasan',
+              message: 'Silakan buka tab "Pesanan" untuk melihat riwayat menginap Anda dan menulis ulasan.',
+              buttonText: 'Mengerti',
+              color: AppColors.primaryBlue,
             ),
             child: const Text('Tulis Review Pesanan'),
           ),

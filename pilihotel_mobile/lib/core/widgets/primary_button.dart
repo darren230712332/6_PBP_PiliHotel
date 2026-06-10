@@ -9,12 +9,14 @@ class PrimaryButton extends StatefulWidget {
     this.onPressed,
     this.icon,
     this.color,
+    this.iconOnRight = false,
   });
 
   final String text;
   final VoidCallback? onPressed;
   final IconData? icon;
   final Color? color;
+  final bool iconOnRight;
 
   @override
   State<PrimaryButton> createState() => _PrimaryButtonState();
@@ -40,7 +42,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
             style: FilledButton.styleFrom(
               backgroundColor: widget.color ?? AppColors.primaryBlue,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(14),
               ),
               elevation: 4,
               shadowColor: AppColors.primaryBlue.withValues(alpha: .25),
@@ -49,7 +51,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (widget.icon != null) ...[
+                if (widget.icon != null && !widget.iconOnRight) ...[
                   Icon(widget.icon, size: 16, color: Colors.white),
                   const SizedBox(width: 8),
                 ],
@@ -61,6 +63,10 @@ class _PrimaryButtonState extends State<PrimaryButton> {
                     color: Colors.white,
                   ),
                 ),
+                if (widget.icon != null && widget.iconOnRight) ...[
+                  const SizedBox(width: 8),
+                  Icon(widget.icon, size: 16, color: Colors.white),
+                ],
               ],
             ),
           ),
