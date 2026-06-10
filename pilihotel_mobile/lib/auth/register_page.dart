@@ -4,10 +4,7 @@ import '../core/colors.dart';
 import '../core/services/auth_service.dart';
 import '../core/widgets/bottom_navbar.dart';
 import '../core/widgets/custom_textfield.dart';
-import '../core/widgets/logo.dart';
 import '../core/widgets/primary_button.dart';
-import 'splash_page.dart';
-import 'register_success_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -23,6 +20,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String email = '';
   String password = '';
   String passwordConfirmation = '';
+  bool hidePassword = true;
+  bool hidePasswordConfirmation = true;
   bool agreedToTerms = false;
   bool loading = false;
 
@@ -96,8 +95,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 label: 'Kata Sandi',
                 hint: 'Min. 6 karakter',
                 icon: Icons.lock_outline,
-                obscure: true,
-                suffix: Icon(Icons.visibility_outlined, size: 17),
+                obscure: hidePassword,
+                suffix: IconButton(
+                  icon: Icon(
+                    hidePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    size: 17,
+                  ),
+                  onPressed: () => setState(() => hidePassword = !hidePassword),
+                ),
                 onChanged: (value) => password = value,
               ),
               const SizedBox(height: 12),
@@ -105,7 +112,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 label: 'Konfirmasi Kata Sandi',
                 hint: 'Ulangi kata sandi Anda',
                 icon: Icons.lock_outline,
-                obscure: true,
+                obscure: hidePasswordConfirmation,
+                suffix: IconButton(
+                  icon: Icon(
+                    hidePasswordConfirmation
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    size: 17,
+                  ),
+                  onPressed: () => setState(
+                    () => hidePasswordConfirmation = !hidePasswordConfirmation,
+                  ),
+                ),
                 onChanged: (value) => passwordConfirmation = value,
               ),
               const SizedBox(height: 12),
@@ -169,12 +187,17 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _register() async {
     if (!agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Setujui syarat dan kebijakan terlebih dahulu.')),
+        const SnackBar(
+          content: Text('Setujui syarat dan kebijakan terlebih dahulu.'),
+        ),
       );
       return;
     }
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty || passwordConfirmation.isEmpty) {
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        passwordConfirmation.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua data registrasi.')),
       );
@@ -209,9 +232,10 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message']?.toString() ?? 'Registrasi gagal')),
+        SnackBar(
+          content: Text(result['message']?.toString() ?? 'Registrasi gagal'),
+        ),
       );
     }
   }
-
 }
