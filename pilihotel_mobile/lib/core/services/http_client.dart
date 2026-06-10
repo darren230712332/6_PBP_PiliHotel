@@ -9,23 +9,42 @@ import '../constants/api_constants.dart';
 import '../exceptions/api_exceptions.dart';
 
 /// HTTP Client for API communication with singleton pattern
-/// 
-/// Provides methods for GET, POST, PUT, DELETE requests with automatic
-/// token management and error handling.
+///
+/// Base URL resolution order:
+///   1. --dart-define=API_BASE_URL=http://YOUR_IP:8000/api  (highest priority)
+///   2. Web browser → http://127.0.0.1:8000/api
+///   3. Android Emulator → http://10.0.2.2:8000/api  (loopback to host)
+///   4. iOS Simulator → http://127.0.0.1:8000/api
+///   5. Physical device → set via --dart-define (see run.sh / .vscode/launch.json)
+///
+/// Quick start for physical device:
+///   flutter run --dart-define=API_BASE_URL=http://<YOUR_MAC_IP>:8000/api
+///   Or simply run: ./run.sh  (auto-detects Mac IP)
 class HttpClient {
-  // Override with --dart-define=API_BASE_URL=... when needed.
   static String get _baseUrl {
+    // 1. Highest priority: explicit override via --dart-define
     const envBaseUrl = String.fromEnvironment('API_BASE_URL');
     if (envBaseUrl.isNotEmpty) {
       return envBaseUrl;
     }
 
+    // 2. Web
     if (kIsWeb) {
       return 'http://127.0.0.1:8000/api';
     }
 
-    // For physical Android device via USB
-    return 'http://10.184.134.95:8000/api';
+    // 3. Android Emulator: 10.0.2.2 is the special alias for host machine's localhost
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000/api';
+    }
+
+    // 4. iOS Simulator: localhost resolves to host machine directly
+    if (Platform.isIOS) {
+      return 'http://127.0.0.1:8000/api';
+    }
+
+    // 5. Fallback (macOS/Linux/Windows desktop)
+    return 'http://127.0.0.1:8000/api';
   }
 
   static final HttpClient _instance = HttpClient._internal();
