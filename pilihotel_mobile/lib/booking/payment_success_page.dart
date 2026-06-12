@@ -6,6 +6,7 @@ import '../core/models/booking.dart' as api;
 import '../core/widgets/bottom_navbar.dart';
 import '../core/widgets/custom_appbar.dart';
 import '../core/widgets/hotel_card.dart';
+import '../core/services/http_client.dart';
 import 'pdf_page.dart';
 
 class PaymentSuccessPage extends StatelessWidget {
@@ -20,9 +21,7 @@ class PaymentSuccessPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final qrPayload = booking.qrCode?.isNotEmpty == true
-        ? booking.qrCode!
-        : booking.bookingCode;
+    final qrPayload = '${HttpClient.serverUrl}/api/bookings/${booking.bookingCode}/download-pdf';
 
     final roomName = booking.room?.name ?? 'Deluxe King Room';
     final roomDetails = roomName.contains('•') || roomName.contains(' - ')
