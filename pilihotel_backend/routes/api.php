@@ -41,3 +41,4 @@ Route::get('/hotels', [HotelController::class, 'index']);
 Route::get('/hotels/nearby', [HotelController::class, 'nearby']);
 Route::get('/hotels/{hotel}', [HotelController::class, 'show']);
 Route::get('/reviews', [ReviewController::class, 'index']);
+Route::get('/bookings/{booking}/download-pdf', [BookingController::class, 'downloadPdf']);

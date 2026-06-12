@@ -8,6 +8,7 @@ import '../core/models/booking.dart' as api;
 import '../core/services/booking_service.dart';
 import '../review/review_page.dart';
 import '../review/review_result_page.dart';
+import '../booking/payment_page.dart';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -327,20 +328,33 @@ class _OrderCard extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PaymentSuccessPage(
-                      hotel: _toUiHotel(order.rawBooking),
-                      booking: order.rawBooking,
+                if (order.rawBooking.paymentStatus == 'paid') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PaymentSuccessPage(
+                        hotel: _toUiHotel(order.rawBooking),
+                        booking: order.rawBooking,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  showPaymentSheet(
+                    context,
+                    _toUiHotel(order.rawBooking),
+                    total: order.rawBooking.totalPrice,
+                    bookingId: order.bookingId,
+                  );
+                }
               },
-              icon: const Icon(Icons.qr_code_scanner, size: 16, color: Colors.white),
-              label: const Text(
-                'Lihat Bukti',
-                style: TextStyle(
+              icon: Icon(
+                order.rawBooking.paymentStatus == 'paid' ? Icons.qr_code_scanner : Icons.payment,
+                size: 16,
+                color: Colors.white,
+              ),
+              label: Text(
+                order.rawBooking.paymentStatus == 'paid' ? 'Lihat Bukti' : 'Bayar Sekarang',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
