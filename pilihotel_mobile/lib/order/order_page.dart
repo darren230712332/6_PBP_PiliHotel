@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../booking/payment_success_page.dart';
 import '../core/colors.dart';
+import '../core/services/notification_service.dart';
 import '../core/widgets/custom_dialog.dart';
 import '../core/widgets/hotel_card.dart';
 import '../core/models/booking.dart' as api;
@@ -20,6 +22,7 @@ class OrderPage extends StatefulWidget {
 class _OrderPageState extends State<OrderPage> {
   final BookingService _bookingService = BookingService();
   Future<List<api.Booking>>? _bookingsFuture;
+  List<int> _simulatedCompletedIds = [];
 
   @override
   void initState() {
@@ -28,9 +31,22 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   void _refreshBookings() {
-    setState(() {
-      _bookingsFuture = _bookingService.getBookings();
-    });
+    SharedPreferences.getInstance()
+        .then((prefs) {
+          final list =
+              prefs.getStringList('simulated_completed_bookings') ?? [];
+          setState(() {
+            _simulatedCompletedIds = list
+                .map((idStr) => int.tryParse(idStr) ?? 0)
+                .toList();
+            _bookingsFuture = _bookingService.getBookings();
+          });
+        })
+        .catchError((_) {
+          setState(() {
+            _bookingsFuture = _bookingService.getBookings();
+          });
+        });
   }
 
   @override
@@ -41,11 +57,19 @@ class _OrderPageState extends State<OrderPage> {
         elevation: 0,
         title: const Text(
           'Pesanan Saya',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.text),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            color: AppColors.text,
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.text, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.text,
+            size: 18,
+          ),
           onPressed: () => Navigator.maybePop(context),
         ),
       ),
@@ -54,7 +78,8 @@ class _OrderPageState extends State<OrderPage> {
         builder: (context, snapshot) {
           final bookings = snapshot.data ?? [];
 
-          if (snapshot.connectionState == ConnectionState.waiting && bookings.isEmpty) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              bookings.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -67,36 +92,38 @@ class _OrderPageState extends State<OrderPage> {
             );
           }
 
-          final orders = bookings
-              .map(
-                (booking) {
-                  final isCompleted = booking.paymentStatus == 'paid' && booking.checkOut.isBefore(DateTime.now());
-                  final displayStatus = isCompleted ? 'Selesai Menginap' : booking.status;
-                  Color displayColor = AppColors.muted;
-                  if (isCompleted) {
-                    displayColor = AppColors.success;
-                  } else if (booking.status == 'Menunggu Check-in') {
-                    displayColor = AppColors.muted;
-                  } else if (booking.status == 'Menunggu Pembayaran') {
-                    displayColor = AppColors.warning;
-                  }
+          final orders = bookings.map((booking) {
+            final isCompleted =
+                booking.paymentStatus == 'paid' &&
+                (booking.checkOut.isBefore(DateTime.now()) ||
+                    _simulatedCompletedIds.contains(booking.id));
+            final displayStatus = isCompleted
+                ? 'Selesai Menginap'
+                : booking.status;
+            Color displayColor = AppColors.muted;
+            if (isCompleted) {
+              displayColor = AppColors.success;
+            } else if (booking.status == 'Menunggu Check-in') {
+              displayColor = AppColors.muted;
+            } else if (booking.status == 'Menunggu Pembayaran') {
+              displayColor = AppColors.warning;
+            }
 
-                  return _Order(
-                    bookingId: booking.id,
-                    code: booking.bookingCode,
-                    hotelName: booking.hotel?.name ?? 'Hotel',
-                    date: '${booking.checkIn.day} ${_month(booking.checkIn.month)} - ${booking.checkOut.day} ${_month(booking.checkOut.month)}',
-                    duration: '${booking.nights} Malam',
-                    status: displayStatus,
-                    statusColor: displayColor,
-                    image: booking.hotel?.image ?? 'bed',
-                    canReview: isCompleted,
-                    rawBooking: booking,
-                    review: booking.review,
-                  );
-                }
-              )
-              .toList();
+            return _Order(
+              bookingId: booking.id,
+              code: booking.bookingCode,
+              hotelName: booking.hotel?.name ?? 'Hotel',
+              date:
+                  '${booking.checkIn.day} ${_month(booking.checkIn.month)} - ${booking.checkOut.day} ${_month(booking.checkOut.month)}',
+              duration: '${booking.nights} Malam',
+              status: displayStatus,
+              statusColor: displayColor,
+              image: booking.hotel?.image ?? 'bed',
+              canReview: isCompleted,
+              rawBooking: booking,
+              review: booking.review,
+            );
+          }).toList();
 
           return RefreshIndicator(
             onRefresh: () async => _refreshBookings(),
@@ -108,7 +135,10 @@ class _OrderPageState extends State<OrderPage> {
                   children: [
                     const Text(
                       'Status Pesanan',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const Spacer(),
                     Container(
@@ -144,10 +174,7 @@ class _OrderPageState extends State<OrderPage> {
                   )
                 else
                   for (final order in orders)
-                    _OrderCard(
-                      order: order,
-                      onRefresh: _refreshBookings,
-                    ),
+                    _OrderCard(order: order, onRefresh: _refreshBookings),
               ],
             ),
           );
@@ -323,83 +350,191 @@ class _OrderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 44,
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () {
-                if (order.rawBooking.paymentStatus == 'paid') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PaymentSuccessPage(
-                        hotel: _toUiHotel(order.rawBooking),
-                        booking: order.rawBooking,
+          if (order.rawBooking.paymentStatus == 'paid' && !order.canReview) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PaymentSuccessPage(
+                              hotel: _toUiHotel(order.rawBooking),
+                              booking: order.rawBooking,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.qr_code_scanner,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Lihat Bukti',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                  );
-                } else {
-                  showPaymentSheet(
-                    context,
-                    _toUiHotel(order.rawBooking),
-                    total: order.rawBooking.totalPrice,
-                    bookingId: order.bookingId,
-                  );
-                }
-              },
-              icon: Icon(
-                order.rawBooking.paymentStatus == 'paid' ? Icons.qr_code_scanner : Icons.payment,
-                size: 16,
-                color: Colors.white,
-              ),
-              label: Text(
-                order.rawBooking.paymentStatus == 'paid' ? 'Lihat Bukti' : 'Bayar Sekarang',
-                style: const TextStyle(
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final list =
+                            prefs.getStringList(
+                              'simulated_completed_bookings',
+                            ) ??
+                            [];
+                        if (!list.contains(order.bookingId.toString())) {
+                          list.add(order.bookingId.toString());
+                          await prefs.setStringList(
+                            'simulated_completed_bookings',
+                            list,
+                          );
+                        }
+
+                        await NotificationService().triggerDemoNotification(
+                          bookingId: order.bookingId,
+                          hotelName: order.hotelName,
+                          stayInfo: '${order.date} • ${order.duration}',
+                          image: order.image,
+                          delaySeconds: 1,
+                        );
+
+                        onRefresh();
+                      },
+                      icon: const Icon(
+                        Icons.play_circle_outline,
+                        size: 14,
+                        color: Colors.orange,
+                      ),
+                      label: const Text(
+                        'Simulasi Selesai',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Colors.orange,
+                          width: 1.5,
+                        ),
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            SizedBox(
+              height: 44,
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  if (order.rawBooking.paymentStatus == 'paid') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentSuccessPage(
+                          hotel: _toUiHotel(order.rawBooking),
+                          booking: order.rawBooking,
+                        ),
+                      ),
+                    );
+                  } else {
+                    showPaymentSheet(
+                      context,
+                      _toUiHotel(order.rawBooking),
+                      total: order.rawBooking.totalPrice,
+                      bookingId: order.bookingId,
+                    );
+                  }
+                },
+                icon: Icon(
+                  order.rawBooking.paymentStatus == 'paid'
+                      ? Icons.qr_code_scanner
+                      : Icons.payment,
+                  size: 16,
                   color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
                 ),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                label: Text(
+                  order.rawBooking.paymentStatus == 'paid'
+                      ? 'Lihat Bukti'
+                      : 'Bayar Sekarang',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-                elevation: 0,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _SoftButton(
                   icon: Icons.edit_outlined,
-                  label: 'Beri Ulasan',
+                  label: order.review != null ? 'Edit Ulasan' : 'Beri Ulasan',
                   color: AppColors.primaryBlue,
                   backgroundColor: const Color(0xFFEAF4FF),
-                  onPressed: order.canReview ? () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ReviewPage(
-                          bookingId: order.bookingId,
-                          hotelName: order.hotelName,
-                          stayInfo: '${order.date} • ${order.duration}',
-                          image: order.image,
-                          existingReview: order.review,
+                  onPressed: order.canReview
+                      ? () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReviewPage(
+                                bookingId: order.bookingId,
+                                hotelName: order.hotelName,
+                                stayInfo: '${order.date} • ${order.duration}',
+                                image: order.image,
+                                existingReview: order.review,
+                              ),
+                            ),
+                          );
+                          onRefresh();
+                        }
+                      : () => showPiliDialog(
+                          context,
+                          icon: Icons.lock_clock_outlined,
+                          title: 'Review Belum Tersedia',
+                          message:
+                              'Ulasan baru bisa ditulis setelah tanggal check-out selesai.',
+                          buttonText: 'Mengerti',
+                          color: AppColors.primaryBlue,
                         ),
-                      ),
-                    );
-                    onRefresh();
-                  } : () => showPiliDialog(
-                    context,
-                    icon: Icons.lock_clock_outlined,
-                    title: 'Review Belum Tersedia',
-                    message: 'Ulasan baru bisa ditulis setelah tanggal check-out selesai.',
-                    buttonText: 'Mengerti',
-                    color: AppColors.primaryBlue,
-                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -407,29 +542,36 @@ class _OrderCard extends StatelessWidget {
                 child: _SoftButton(
                   icon: Icons.visibility_outlined,
                   label: 'Lihat Ulasan',
-                  color: order.review != null ? AppColors.text.withValues(alpha: 0.8) : const Color(0xFF7A869A),
-                  backgroundColor: order.review != null ? const Color(0xFFF0F4F8) : const Color(0xFFF5F7FA),
-                  onPressed: order.review != null ? () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ReviewResultPage(
-                          review: order.review!,
-                          hotelName: order.hotelName,
-                          stayInfo: '${order.date} • ${order.duration}',
-                          image: order.image,
+                  color: order.review != null
+                      ? AppColors.text.withValues(alpha: 0.8)
+                      : const Color(0xFF7A869A),
+                  backgroundColor: order.review != null
+                      ? const Color(0xFFF0F4F8)
+                      : const Color(0xFFF5F7FA),
+                  onPressed: order.review != null
+                      ? () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReviewResultPage(
+                                review: order.review!,
+                                hotelName: order.hotelName,
+                                stayInfo: '${order.date} • ${order.duration}',
+                                image: order.image,
+                              ),
+                            ),
+                          );
+                          onRefresh();
+                        }
+                      : () => showPiliDialog(
+                          context,
+                          icon: Icons.info_outline,
+                          title: 'Belum Ada Ulasan',
+                          message:
+                              'Anda belum memberikan ulasan untuk pesanan ini.',
+                          buttonText: 'Tutup',
+                          color: AppColors.primaryBlue,
                         ),
-                      ),
-                    );
-                    onRefresh();
-                  } : () => showPiliDialog(
-                    context,
-                    icon: Icons.info_outline,
-                    title: 'Belum Ada Ulasan',
-                    message: 'Anda belum memberikan ulasan untuk pesanan ini.',
-                    buttonText: 'Tutup',
-                    color: AppColors.primaryBlue,
-                  ),
                 ),
               ),
             ],
@@ -504,7 +646,8 @@ UiHotel _toUiHotel(api.Booking booking) {
   if (nameLower.contains('sunset view')) imageKey = 'sunset';
 
   final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
-  final formattedPrice = 'Rp${hotel.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
+  final formattedPrice =
+      'Rp${hotel.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
 
   return UiHotel(
     name: hotel.name,

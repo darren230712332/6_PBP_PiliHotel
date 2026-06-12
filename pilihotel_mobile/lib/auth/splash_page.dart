@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
-import '../core/services/auth_service.dart';
-import '../core/widgets/bottom_navbar.dart';
-import '../core/widgets/custom_textfield.dart';
 import '../core/widgets/logo.dart';
-import '../core/widgets/primary_button.dart';
 import 'otp_page.dart';
-import 'register_page.dart';
 import 'login_page.dart';
 import 'login_success_page.dart';
 

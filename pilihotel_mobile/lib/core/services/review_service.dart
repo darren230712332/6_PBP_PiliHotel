@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import '../models/review.dart';
@@ -41,12 +41,14 @@ class ReviewService {
       'rating': payload['rating'].toString(),
       if (payload['comment'] != null && payload['comment'].toString().trim().isNotEmpty)
         'comment': payload['comment'].toString(),
+      if (payload['simulate'] != null)
+        'simulate': payload['simulate'].toString(),
     };
 
     final response = await _httpClient.uploadMultipart(
       '/reviews',
       fields: fields,
-      files: {'photos': photos},
+      files: {'photos[]': photos},
     );
 
     if (response.statusCode != 201) {
@@ -57,8 +59,41 @@ class ReviewService {
     return Review.fromJson(decoded['data'] as Map<String, dynamic>);
   }
 
-  Future<Review> updateReview(int reviewId, Map<String, dynamic> payload) async {
-    final response = await _httpClient.put('/reviews/$reviewId', body: payload);
+  Future<Review> updateReview(
+    int reviewId,
+    Map<String, dynamic> payload, {
+    List<File> newPhotos = const [],
+  }) async {
+    if (newPhotos.isEmpty) {
+      final response = await _httpClient.put('/reviews/$reviewId', body: payload);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update review');
+      }
+
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      return Review.fromJson(decoded['data'] as Map<String, dynamic>);
+    }
+
+    // If there are new photos, we must use Multipart upload with Laravel's PUT method spoofing
+    final fields = <String, String>{
+      '_method': 'PUT',
+      'rating': payload['rating'].toString(),
+      if (payload['comment'] != null && payload['comment'].toString().trim().isNotEmpty)
+        'comment': payload['comment'].toString(),
+    };
+
+    // Add existing photos to the fields (so Laravel knows which old photos to keep)
+    final List<dynamic> oldPhotos = payload['photos'] ?? [];
+    for (int i = 0; i < oldPhotos.length; i++) {
+      fields['existing_photos[$i]'] = oldPhotos[i].toString();
+    }
+
+    final response = await _httpClient.uploadMultipart(
+      '/reviews/$reviewId',
+      fields: fields,
+      files: {'photos[]': newPhotos},
+    );
+
     if (response.statusCode != 200) {
       throw Exception('Failed to update review');
     }

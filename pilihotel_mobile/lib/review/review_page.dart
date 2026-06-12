@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/colors.dart';
 import '../core/services/review_service.dart';
@@ -158,13 +159,22 @@ class _ReviewPageState extends State<ReviewPage> {
           'photos': _existingPhotos, // Keep current photos
         };
         
-        await _reviewService.updateReview(widget.existingReview!.id, payload);
+        await _reviewService.updateReview(
+          widget.existingReview!.id,
+          payload,
+          newPhotos: _selectedPhotos,
+        );
       } else {
         // Create mode
+        final prefs = await SharedPreferences.getInstance();
+        final simulatedList = prefs.getStringList('simulated_completed_bookings') ?? [];
+        final isSimulated = simulatedList.contains(widget.bookingId.toString());
+
         final payload = <String, dynamic>{
           'booking_id': widget.bookingId,
           'rating': _rating,
           'comment': commentText,
+          if (isSimulated) 'simulate': true,
         };
         await _reviewService.createReview(payload, photos: _selectedPhotos);
       }

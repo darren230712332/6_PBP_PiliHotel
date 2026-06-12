@@ -44,7 +44,7 @@ class ReviewController extends Controller
             ], 422);
         }
 
-        if ($booking->check_out->isFuture()) {
+        if ($booking->check_out->isFuture() && !$request->boolean('simulate')) {
             return response()->json([
                 'message' => 'Review baru tersedia setelah tanggal check-out.',
             ], 422);
@@ -79,6 +79,8 @@ class ReviewController extends Controller
         $payload = $request->validate([
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string'],
+            'existing_photos' => ['nullable', 'array'],
+            'existing_photos.*' => ['nullable', 'string'],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
         ]);
@@ -86,7 +88,7 @@ class ReviewController extends Controller
         $review->update([
             'rating' => $payload['rating'],
             'comment' => $payload['comment'] ?? null,
-            'photos' => $this->resolvePhotos($request, $payload['photos'] ?? []),
+            'photos' => $this->resolvePhotos($request, $payload['existing_photos'] ?? []),
         ]);
 
         return response()->json([

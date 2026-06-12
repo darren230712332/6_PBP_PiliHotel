@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/colors.dart';
 import '../core/services/booking_service.dart';
+import '../core/services/notification_service.dart';
 import '../core/widgets/hotel_card.dart';
 import '../core/widgets/loading_dialog.dart';
 import '../core/widgets/primary_button.dart';
@@ -164,6 +165,14 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     return 'Rp$buffer';
   }
 
+  String _month(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return months[month - 1];
+  }
+
   Future<void> _payBooking() async {
     setState(() => _loading = true);
     showPiliLoadingDialog(context, message: 'Menyelesaikan pembayaran...');
@@ -178,6 +187,32 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         paymentMethod: methodStr,
       );
       print('DEBUG_PAYMENT: Payment response received. New status: ${booking.status}');
+
+      // Schedule checkin & checkout reminders and trigger a demo notification in 5 seconds
+      try {
+        await NotificationService().scheduleCheckinReminder(
+          bookingId: booking.id,
+          hotelName: widget.hotel.name,
+          checkinTime: booking.checkIn,
+        );
+        final stayInfoString = '${booking.checkIn.day} ${_month(booking.checkIn.month)} - ${booking.checkOut.day} ${_month(booking.checkOut.month)} • ${booking.nights} Malam';
+        await NotificationService().scheduleCheckoutReminder(
+          bookingId: booking.id,
+          hotelName: widget.hotel.name,
+          checkoutTime: booking.checkOut,
+          stayInfo: stayInfoString,
+          image: widget.hotel.image,
+        );
+        await NotificationService().triggerDemoNotification(
+          bookingId: booking.id,
+          hotelName: widget.hotel.name,
+          stayInfo: stayInfoString,
+          image: widget.hotel.image,
+          delaySeconds: 5,
+        );
+      } catch (notifErr) {
+        print('DEBUG_PAYMENT: Failed to schedule notifications: $notifErr');
+      }
 
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
