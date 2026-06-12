@@ -12,7 +12,20 @@
           "package_name": "com.example.pilihotel_pbp_6"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "638218380503-6913e8focoknrn084ip82gve1gj8g5lt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pilihotel_pbp_6",
+            "certificate_hash": "485eda89b0c15b50bf7105080f76ea4cfb972559"
+          }
+        },
+        {
+          "client_id": "638218380503-lmuidkms6cg3kb3fvk104vq0v84i6vg9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBHfsvCINbDIEY3ckHlI7WbT9KmZYVEKzA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "638218380503-lmuidkms6cg3kb3fvk104vq0v84i6vg9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
