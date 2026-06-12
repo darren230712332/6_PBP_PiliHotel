@@ -8,7 +8,7 @@ import '../core/widgets/custom_dialog.dart';
 import '../core/widgets/hotel_card.dart';
 import '../core/widgets/loading_dialog.dart';
 import '../core/models/review.dart' as api;
-import 'review_page.dart';
+// import 'review_page.dart';
 
 class ReviewResultPage extends StatefulWidget {
   final api.Review review;
@@ -99,6 +99,7 @@ class _ReviewResultPageState extends State<ReviewResultPage> {
     }
   }
 
+  /*
   Future<void> _editReview() async {
     await Navigator.push(
       context,
@@ -118,6 +119,7 @@ class _ReviewResultPageState extends State<ReviewResultPage> {
       Navigator.pop(context);
     }
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -327,7 +329,8 @@ class _ReviewResultPageState extends State<ReviewResultPage> {
           ),
           const SizedBox(height: 28),
 
-          // Action Buttons: Edit and Delete
+          // Action Buttons: Delete (Edit button commented out)
+          /*
           Row(
             children: [
               Expanded(
@@ -370,6 +373,25 @@ class _ReviewResultPageState extends State<ReviewResultPage> {
                 ),
               ),
             ],
+          ),
+          */
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: _loading ? null : _deleteReview,
+              icon: const Icon(Icons.delete_outline, size: 15),
+              label: const Text('Hapus Ulasan', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFEBEE),
+                foregroundColor: Colors.red,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: Color(0xFFFFCDD2)),
+                ),
+              ),
+            ),
           ),
         ],
       ),
