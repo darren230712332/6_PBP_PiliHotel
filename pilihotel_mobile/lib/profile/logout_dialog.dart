@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/splash_page.dart';
 import '../core/colors.dart';
+import '../core/services/auth_service.dart';
 import '../core/widgets/primary_button.dart';
 
 Future<void> showLogoutDialog(BuildContext context) {
@@ -34,11 +35,17 @@ Future<void> showLogoutDialog(BuildContext context) {
             PrimaryButton(
               text: 'Ya, Keluar',
               color: AppColors.danger,
-              onPressed: () => Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const SplashPage()),
-                (_) => false,
-              ),
+              onPressed: () async {
+                // Call logout to clear Laravel API token, Google session, and Firebase Auth session
+                await AuthService().logout();
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SplashPage()),
+                    (_) => false,
+                  );
+                }
+              },
             ),
             const SizedBox(height: 10),
             TextButton(
