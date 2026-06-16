@@ -544,7 +544,7 @@ class _Spec extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.primaryBlue.withOpacity(0.12)),
+            border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.12)),
           ),
           child: Column(
             children: [

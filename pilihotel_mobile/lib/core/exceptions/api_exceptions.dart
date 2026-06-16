@@ -27,22 +27,22 @@ class ServerException extends ApiException {
 
 /// Exception thrown for authentication failures (401, 403)
 class AuthenticationException extends ServerException {
-  AuthenticationException(String message)
-      : super(message, statusCode: 401);
+  AuthenticationException(super.message)
+      : super(statusCode: 401);
 }
 
 /// Exception thrown when requested resource is not found (404)
 class NotFoundException extends ServerException {
-  NotFoundException(String message)
-      : super(message, statusCode: 404);
+  NotFoundException(super.message)
+      : super(statusCode: 404);
 }
 
 /// Exception thrown when validation fails (422)
 class ValidationException extends ServerException {
   ValidationException(
-    String message, {
-    Map<String, dynamic>? errorData,
-  }) : super(message, statusCode: 422, errorData: errorData);
+    super.message, {
+    super.errorData,
+  }) : super(statusCode: 422);
 }
 
 /// Exception thrown when request timeout occurs

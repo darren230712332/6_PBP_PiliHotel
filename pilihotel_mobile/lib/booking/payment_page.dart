@@ -177,16 +177,16 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     setState(() => _loading = true);
     showPiliLoadingDialog(context, message: 'Menyelesaikan pembayaran...');
 
-    print('DEBUG_PAYMENT: Initiating payment for booking ID: ${widget.bookingId}');
+    debugPrint('DEBUG_PAYMENT: Initiating payment for booking ID: ${widget.bookingId}');
     try {
       final methodStr = method == 'wallet' ? 'Grand Palace Wallet' : 'Transfer Bank';
-      print('DEBUG_PAYMENT: Selected method: $methodStr');
+      debugPrint('DEBUG_PAYMENT: Selected method: $methodStr');
       
       final booking = await _bookingService.payBooking(
         widget.bookingId,
         paymentMethod: methodStr,
       );
-      print('DEBUG_PAYMENT: Payment response received. New status: ${booking.status}');
+      debugPrint('DEBUG_PAYMENT: Payment response received. New status: ${booking.status}');
 
       // Schedule checkin & checkout reminders and trigger a demo notification in 5 seconds
       try {
@@ -211,7 +211,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           delaySeconds: 5,
         );
       } catch (notifErr) {
-        print('DEBUG_PAYMENT: Failed to schedule notifications: $notifErr');
+        debugPrint('DEBUG_PAYMENT: Failed to schedule notifications: $notifErr');
       }
 
       if (!mounted) return;
@@ -227,7 +227,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         ),
       );
     } catch (e) {
-      print('DEBUG_PAYMENT: Error caught during payment: $e');
+      debugPrint('DEBUG_PAYMENT: Error caught during payment: $e');
       if (mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }

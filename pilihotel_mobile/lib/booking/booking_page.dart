@@ -129,7 +129,7 @@ class _BookingPageState extends State<BookingPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.12),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -206,7 +206,7 @@ class _BookingPageState extends State<BookingPage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, -8),
             ),
@@ -347,7 +347,7 @@ class _BookingPageState extends State<BookingPage> {
     final isEnd = stayRange != null && DateUtils.isSameDay(day, stayRange!.end);
     final isBetween = stayRange != null && day.isAfter(stayRange!.start) && day.isBefore(stayRange!.end);
 
-    Color textColor = isCurrentMonth ? AppColors.text : AppColors.muted.withOpacity(0.5);
+    Color textColor = isCurrentMonth ? AppColors.text : AppColors.muted.withValues(alpha: 0.5);
     if (isStart || isEnd) {
       textColor = Colors.white;
     } else if (isBetween) {
@@ -362,7 +362,7 @@ class _BookingPageState extends State<BookingPage> {
             const Expanded(child: SizedBox()),
             Expanded(
               child: Container(
-                color: AppColors.primaryBlue.withOpacity(0.12),
+                color: AppColors.primaryBlue.withValues(alpha: 0.12),
               ),
             ),
           ],
@@ -372,7 +372,7 @@ class _BookingPageState extends State<BookingPage> {
           children: [
             Expanded(
               child: Container(
-                color: AppColors.primaryBlue.withOpacity(0.12),
+                color: AppColors.primaryBlue.withValues(alpha: 0.12),
               ),
             ),
             const Expanded(child: SizedBox()),
@@ -380,7 +380,7 @@ class _BookingPageState extends State<BookingPage> {
         );
       } else if (isBetween) {
         rangeBackground = Container(
-          color: AppColors.primaryBlue.withOpacity(0.12),
+          color: AppColors.primaryBlue.withValues(alpha: 0.12),
         );
       }
     }
@@ -407,7 +407,7 @@ class _BookingPageState extends State<BookingPage> {
                 child: Text(
                   '${day.day}',
                   style: TextStyle(
-                    color: isPast ? AppColors.muted.withOpacity(0.35) : textColor,
+                    color: isPast ? AppColors.muted.withValues(alpha: 0.35) : textColor,
                     fontWeight: (isStart || isEnd || isBetween) ? FontWeight.bold : FontWeight.w500,
                     fontSize: 10.5,
                   ),
@@ -608,7 +608,7 @@ class _BookingPageState extends State<BookingPage> {
       int? finalRoomId = widget.roomId;
 
       if (finalRoomId == null) {
-        print('DEBUG_BOOKING: roomId is null, searching hotel and room details...');
+        debugPrint('DEBUG_BOOKING: roomId is null, searching hotel and room details...');
         final hotels = await _hotelService.getHotels();
         final matchedHotel = hotels.firstWhere(
           (hotel) => hotel.name.toLowerCase() == widget.hotel.name.toLowerCase(),
@@ -626,7 +626,7 @@ class _BookingPageState extends State<BookingPage> {
         finalRoomId = room.id;
       }
 
-      print('DEBUG_BOOKING: Using room ID: $finalRoomId');
+      debugPrint('DEBUG_BOOKING: Using room ID: $finalRoomId');
 
       final extras = <Map<String, dynamic>>[
         if (breakfast) {'name': 'Sarapan Premium Harian', 'price': 50000},
@@ -634,19 +634,19 @@ class _BookingPageState extends State<BookingPage> {
         if (lateCheckout) {'name': 'Late Check-out', 'price': 75000},
       ];
 
-      print('DEBUG_BOOKING: Creating booking on backend...');
+      debugPrint('DEBUG_BOOKING: Creating booking on backend...');
       final booking = await _bookingService.createBooking({
         'room_id': finalRoomId,
         'check_in': _apiDate(stayRange!.start),
         'check_out': _apiDate(stayRange!.end),
         'extras': extras,
       });
-      print('DEBUG_BOOKING: Booking created successfully. Booking ID: ${booking.id}');
+      debugPrint('DEBUG_BOOKING: Booking created successfully. Booking ID: ${booking.id}');
 
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
 
-      print('DEBUG_BOOKING: Showing payment sheet...');
+      debugPrint('DEBUG_BOOKING: Showing payment sheet...');
       showPaymentSheet(
         context,
         widget.hotel,
@@ -654,7 +654,7 @@ class _BookingPageState extends State<BookingPage> {
         bookingId: booking.id,
       );
     } catch (e) {
-      print('DEBUG_BOOKING: Error caught: $e');
+      debugPrint('DEBUG_BOOKING: Error caught: $e');
       if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }

@@ -20,7 +20,7 @@ import '../exceptions/api_exceptions.dart';
 ///   5. Physical device → set via --dart-define (see run.sh / .vscode/launch.json)
 ///
 /// Quick start for physical device:
-///   flutter run --dart-define=API_BASE_URL=http://<YOUR_MAC_IP>:8000/api
+///   flutter run --dart-define=API_BASE_URL=http://YOUR_MAC_IP:8000/api
 ///   Or simply run: ./run.sh  (auto-detects Mac IP)
 class HttpClient {
   static String get serverUrl {
@@ -199,27 +199,27 @@ class HttpClient {
     String endpoint,
   ) async {
     final url = '$_baseUrl$endpoint';
-    print('DEBUG_HTTP: [HTTP REQUEST] $method $url');
+    debugPrint('DEBUG_HTTP: [HTTP REQUEST] $method $url');
     try {
       final response = await requestFn.call().timeout(
             ApiTimeouts.defaultTimeout,
             onTimeout: () {
-              print('DEBUG_HTTP: [HTTP TIMEOUT] $method $url exceeded 30 seconds');
+              debugPrint('DEBUG_HTTP: [HTTP TIMEOUT] $method $url exceeded 30 seconds');
               throw TimeoutException();
             },
           );
 
-      print('DEBUG_HTTP: [HTTP RESPONSE] $method $url -> Status: ${response.statusCode}');
+      debugPrint('DEBUG_HTTP: [HTTP RESPONSE] $method $url -> Status: ${response.statusCode}');
       _handleResponse(response, method, endpoint);
       return response;
-    } on TimeoutException catch (e) {
-      print('DEBUG_HTTP: [HTTP TIMEOUT ERROR] $method $url -> Timeout');
+    } on TimeoutException {
+      debugPrint('DEBUG_HTTP: [HTTP TIMEOUT ERROR] $method $url -> Timeout');
       rethrow;
     } on ApiException catch (e) {
-      print('DEBUG_HTTP: [HTTP API ERROR] $method $url -> Error: $e');
+      debugPrint('DEBUG_HTTP: [HTTP API ERROR] $method $url -> Error: $e');
       rethrow;
     } catch (e) {
-      print('DEBUG_HTTP: [HTTP UNEXPECTED ERROR] $method $url -> Error: $e');
+      debugPrint('DEBUG_HTTP: [HTTP UNEXPECTED ERROR] $method $url -> Error: $e');
       throw NetworkException(e.toString());
     }
   }
@@ -326,7 +326,7 @@ class HttpClient {
     final uri = Uri.parse('$_baseUrl$endpoint');
     final request = http.MultipartRequest('POST', uri);
 
-    print('DEBUG_UPLOAD: Starting uploadFile to: $uri');
+    debugPrint('DEBUG_UPLOAD: Starting uploadFile to: $uri');
     request.headers['Accept'] = HttpHeaders.accept;
     if (token != null) {
       request.headers['Authorization'] =
@@ -334,9 +334,9 @@ class HttpClient {
     }
 
     try {
-      print('DEBUG_UPLOAD: Reading file bytes for path: ${file.path} ...');
+      debugPrint('DEBUG_UPLOAD: Reading file bytes for path: ${file.path} ...');
       final fileBytes = await file.readAsBytes();
-      print('DEBUG_UPLOAD: File bytes read successfully. Size: ${fileBytes.length} bytes');
+      debugPrint('DEBUG_UPLOAD: File bytes read successfully. Size: ${fileBytes.length} bytes');
       
       final filename = _getFilename(file.path);
       request.files.add(http.MultipartFile.fromBytes(
@@ -346,26 +346,26 @@ class HttpClient {
         contentType: _getMediaType(filename),
       ));
 
-      print('DEBUG_UPLOAD: Sending MultipartRequest...');
+      debugPrint('DEBUG_UPLOAD: Sending MultipartRequest...');
       final streamed = await request.send().timeout(
             ApiTimeouts.uploadTimeout,
             onTimeout: () => throw TimeoutException(),
           );
-      print('DEBUG_UPLOAD: Response stream received. Status: ${streamed.statusCode}');
+      debugPrint('DEBUG_UPLOAD: Response stream received. Status: ${streamed.statusCode}');
       
       final response = await http.Response.fromStream(streamed);
-      print('DEBUG_UPLOAD: Response body: ${response.body}');
+      debugPrint('DEBUG_UPLOAD: Response body: ${response.body}');
 
       _handleResponse(response, 'POST', endpoint);
       return response;
     } on TimeoutException catch (e) {
-      print('DEBUG_UPLOAD: TimeoutException caught: $e');
+      debugPrint('DEBUG_UPLOAD: TimeoutException caught: $e');
       rethrow;
     } on ApiException catch (e) {
-      print('DEBUG_UPLOAD: ApiException caught: $e');
+      debugPrint('DEBUG_UPLOAD: ApiException caught: $e');
       rethrow;
     } catch (e) {
-      print('DEBUG_UPLOAD: Unexpected error caught: $e');
+      debugPrint('DEBUG_UPLOAD: Unexpected error caught: $e');
       throw NetworkException('Upload failed: ${e.toString()}');
     }
   }
