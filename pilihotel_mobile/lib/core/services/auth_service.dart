@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:pilihotel_pbp_6/core/models/index.dart';
 
@@ -20,30 +21,6 @@ class AuthService {
       return jsonDecode(body) as Map<String, dynamic>;
     } catch (_) {
       return {'message': 'Unknown error'};
-    }
-  }
-
-  /// Helper method to handle API responses consistently
-  Map<String, dynamic> _handleSuccess(String body, {required bool isUserResponse}) {
-    try {
-      final data = jsonDecode(body) as Map<String, dynamic>;
-      
-      if (isUserResponse) {
-        final authResponse = AuthResponse.fromJson(data);
-        return {
-          'success': true,
-          'user': authResponse.user,
-          'token': authResponse.token,
-          'message': authResponse.message,
-        };
-      }
-      
-      return {'success': true, 'data': data};
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Failed to parse response: ${e.toString()}',
-      };
     }
   }
 
@@ -176,7 +153,7 @@ class AuthService {
         );
         await FirebaseAuth.instance.signInWithCredential(credential);
       } catch (firebaseError) {
-        print('Firebase Auth Error: $firebaseError');
+        debugPrint('Firebase Auth Error: $firebaseError');
       }
 
       final response = await _httpClient.post(
@@ -335,7 +312,7 @@ class AuthService {
           await _googleSignIn.signOut();
           await FirebaseAuth.instance.signOut();
         } catch (authErr) {
-          print('Error signing out from Google/Firebase: $authErr');
+          debugPrint('Error signing out from Google/Firebase: $authErr');
         }
 
         return {
@@ -355,7 +332,7 @@ class AuthService {
         await _googleSignIn.signOut();
         await FirebaseAuth.instance.signOut();
       } catch (authErr) {
-        print('Error signing out from Google/Firebase: $authErr');
+        debugPrint('Error signing out from Google/Firebase: $authErr');
       }
       return _handleException(e);
     }

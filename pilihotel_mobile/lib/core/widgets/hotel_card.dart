@@ -104,7 +104,7 @@ class HotelImage extends StatelessWidget {
         },
         errorBuilder: (context, error, stackTrace) {
           return Container(
-            color: AppColors.primaryBlue.withOpacity(0.08),
+            color: AppColors.primaryBlue.withValues(alpha: 0.08),
             alignment: Alignment.center,
             child: const Icon(
               Icons.hotel_outlined,
