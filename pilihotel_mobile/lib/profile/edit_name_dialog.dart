@@ -4,7 +4,10 @@ import '../core/colors.dart';
 import '../core/services/auth_service.dart';
 import '../core/widgets/custom_dialog.dart';
 
-Future<bool> showEditNameDialog(BuildContext context, {required String currentName}) async {
+Future<bool> showEditNameDialog(
+  BuildContext context, {
+  required String currentName,
+}) async {
   final authService = AuthService();
   final controller = TextEditingController(text: currentName);
 
@@ -17,7 +20,9 @@ Future<bool> showEditNameDialog(BuildContext context, {required String currentNa
         builder: (context, setStateDialog) {
           return Dialog(
             insetPadding: const EdgeInsets.symmetric(horizontal: 36),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
               child: Column(
@@ -47,21 +52,40 @@ Future<bool> showEditNameDialog(BuildContext context, {required String currentNa
                       const SizedBox(height: 8),
                       TextField(
                         controller: controller,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
                         decoration: const InputDecoration(
                           hintText: 'Masukkan nama lengkap',
-                          hintStyle: TextStyle(fontSize: 12, color: AppColors.muted),
+                          hintStyle: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
                           filled: true,
                           fillColor: Color(0xFFF5F8FC),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.primaryBlue, width: 2),
+                            borderSide: BorderSide(
+                              color: AppColors.primaryBlue,
+                              width: 2,
+                            ),
                           ),
                           enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                            borderSide: BorderSide(
+                              color: AppColors.primaryBlue,
+                              width: 1.5,
+                            ),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: AppColors.primaryBlue, width: 2),
+                            borderSide: BorderSide(
+                              color: AppColors.primaryBlue,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -72,9 +96,14 @@ Future<bool> showEditNameDialog(BuildContext context, {required String currentNa
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: loading ? null : () => Navigator.pop(context, false),
+                        onTap: loading
+                            ? null
+                            : () => Navigator.pop(context, false),
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           child: Text(
                             'Batal',
                             style: TextStyle(
@@ -102,7 +131,11 @@ Future<bool> showEditNameDialog(BuildContext context, {required String currentNa
                                 }
 
                                 setStateDialog(() => loading = true);
-                                final updateResult = await authService.updateProfile(name: newName);
+                                await Future.delayed(
+                                  const Duration(seconds: 2),
+                                );
+                                final updateResult = await authService
+                                    .updateProfile(name: newName);
                                 if (!context.mounted) return;
                                 setStateDialog(() => loading = false);
 
@@ -112,14 +145,17 @@ Future<bool> showEditNameDialog(BuildContext context, {required String currentNa
                                     context,
                                     icon: Icons.check_circle,
                                     title: 'Simpan Berhasil',
-                                    message: 'Perubahan nama profil Anda telah berhasil disimpan.',
+                                    message:
+                                        'Perubahan nama profil Anda telah berhasil disimpan.',
                                   );
                                 } else {
                                   showPiliDialog(
                                     context,
                                     icon: Icons.error,
                                     title: 'Gagal',
-                                    message: updateResult['message']?.toString() ?? 'Gagal mengubah nama.',
+                                    message:
+                                        updateResult['message']?.toString() ??
+                                        'Gagal mengubah nama.',
                                   );
                                 }
                               },
@@ -128,18 +164,21 @@ Future<bool> showEditNameDialog(BuildContext context, {required String currentNa
                           height: 44,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
+                            //simpan
                             color: AppColors.primaryBlue,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryBlue.withValues(alpha: 0.35),
+                                color: AppColors.primaryBlue.withValues(
+                                  alpha: 0.35,
+                                ),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: Text(
-                            loading ? 'Simpan...' : 'Simpan',
+                            loading ? 'Menyimpan...' : 'Simpan',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
