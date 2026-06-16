@@ -4,7 +4,10 @@ import '../core/colors.dart';
 import '../core/services/auth_service.dart';
 import '../core/widgets/custom_dialog.dart';
 
-Future<bool> showEditEmailDialog(BuildContext context, {required String currentEmail}) async {
+Future<bool> showEditEmailDialog(
+  BuildContext context, {
+  required String currentEmail,
+}) async {
   final authService = AuthService();
   final controller = TextEditingController(text: currentEmail);
 
@@ -16,7 +19,9 @@ Future<bool> showEditEmailDialog(BuildContext context, {required String currentE
       return StatefulBuilder(
         builder: (context, setStateDialog) => Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 36),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
             child: Column(
@@ -46,21 +51,40 @@ Future<bool> showEditEmailDialog(BuildContext context, {required String currentE
                     const SizedBox(height: 8),
                     TextField(
                       controller: controller,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.text,
+                      ),
                       decoration: const InputDecoration(
                         hintText: 'contoh@email.com',
-                        hintStyle: TextStyle(fontSize: 12, color: AppColors.muted),
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
                         filled: true,
                         fillColor: Color(0xFFF5F8FC),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         border: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primaryBlue, width: 2),
+                          borderSide: BorderSide(
+                            color: AppColors.primaryBlue,
+                            width: 2,
+                          ),
                         ),
                         enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                          borderSide: BorderSide(
+                            color: AppColors.primaryBlue,
+                            width: 1.5,
+                          ),
                         ),
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primaryBlue, width: 2),
+                          borderSide: BorderSide(
+                            color: AppColors.primaryBlue,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -71,9 +95,14 @@ Future<bool> showEditEmailDialog(BuildContext context, {required String currentE
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     GestureDetector(
-                      onTap: loading ? null : () => Navigator.pop(context, false),
+                      onTap: loading
+                          ? null
+                          : () => Navigator.pop(context, false),
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         child: Text(
                           'Batal',
                           style: TextStyle(
@@ -101,7 +130,10 @@ Future<bool> showEditEmailDialog(BuildContext context, {required String currentE
                               }
 
                               setStateDialog(() => loading = true);
-                              final result = await authService.updateProfile(email: newEmail);
+                              await Future.delayed(const Duration(seconds: 2));
+                              final result = await authService.updateProfile(
+                                email: newEmail,
+                              );
                               if (!context.mounted) return;
                               setStateDialog(() => loading = false);
 
@@ -118,7 +150,9 @@ Future<bool> showEditEmailDialog(BuildContext context, {required String currentE
                                   context,
                                   icon: Icons.error,
                                   title: 'Gagal',
-                                  message: result['message']?.toString() ?? 'Gagal mengubah email.',
+                                  message:
+                                      result['message']?.toString() ??
+                                      'Gagal mengubah email.',
                                 );
                               }
                             },
@@ -131,7 +165,9 @@ Future<bool> showEditEmailDialog(BuildContext context, {required String currentE
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryBlue.withValues(alpha: 0.35),
+                              color: AppColors.primaryBlue.withValues(
+                                alpha: 0.35,
+                              ),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
