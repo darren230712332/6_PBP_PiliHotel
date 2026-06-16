@@ -174,7 +174,7 @@ Future<bool> showEditEmailDialog(
                           ],
                         ),
                         child: Text(
-                          loading ? 'Menyimpan...' : 'Selanjutnya',
+                          loading ? 'Menyimpan...' : 'Simpan',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
