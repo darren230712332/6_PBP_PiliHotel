@@ -73,7 +73,7 @@ class PdfPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -386,7 +386,7 @@ class PdfPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(26),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -460,10 +460,12 @@ class PdfPage extends StatelessWidget {
     if (!context.mounted) return;
     
     // Share the generated PDF
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'Bukti Pembayaran PiliHotel - ${booking.bookingCode}',
-      subject: 'Invoice PiliHotel',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        text: 'Bukti Pembayaran PiliHotel - ${booking.bookingCode}',
+        subject: 'Invoice PiliHotel',
+      ),
     );
   }
 
@@ -491,7 +493,6 @@ class PdfPage extends StatelessWidget {
     final textDark = PdfColor.fromHex('#1E293B');
     final textMuted = PdfColor.fromHex('#94A3B8');
     final borderLight = PdfColor.fromHex('#E2E8F0');
-    final lunasGreen = PdfColor.fromHex('#27AE60');
 
     document.addPage(
       pw.Page(

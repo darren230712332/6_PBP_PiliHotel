@@ -71,6 +71,7 @@ class _ReviewPageState extends State<ReviewPage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       showPiliDialog(
         context,
         icon: Icons.error_outline,

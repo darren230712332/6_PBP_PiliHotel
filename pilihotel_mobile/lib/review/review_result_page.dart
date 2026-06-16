@@ -60,6 +60,7 @@ class _ReviewResultPageState extends State<ReviewResultPage> {
 
     if (confirm != true) return;
 
+    if (!mounted) return;
     setState(() => _loading = true);
     showPiliLoadingDialog(context, message: 'Menghapus ulasan...');
 
@@ -81,10 +82,9 @@ class _ReviewResultPageState extends State<ReviewResultPage> {
       if (!mounted) return;
       Navigator.pop(context); // Go back to OrderPage
     } catch (e) {
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
-      }
       if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading
+      
       showPiliDialog(
         context,
         icon: Icons.error_outline,
