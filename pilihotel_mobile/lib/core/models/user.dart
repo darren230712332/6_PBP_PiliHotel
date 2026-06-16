@@ -6,6 +6,7 @@ class User {
   final String email;
   final String? phone;
   final String? photoUrl;
+  final String? authProvider;
   final DateTime createdAt;
 
   User({
@@ -14,6 +15,7 @@ class User {
     required this.email,
     this.phone,
     this.photoUrl,
+    this.authProvider,
     required this.createdAt,
   });
 
@@ -24,6 +26,7 @@ class User {
       email: json['email'] ?? '',
       phone: json['phone'],
       photoUrl: HttpClient.formatAssetUrl(json['photo_url']),
+      authProvider: json['auth_provider'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -37,6 +40,7 @@ class User {
       'email': email,
       'phone': phone,
       'photo_url': photoUrl,
+      'auth_provider': authProvider,
       'created_at': createdAt.toIso8601String(),
     };
   }

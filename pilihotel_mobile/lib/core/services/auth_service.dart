@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:pilihotel_pbp_6/core/models/index.dart';
 
@@ -166,6 +167,18 @@ class AuthService {
         };
       }
 
+      // Authenticate with Firebase Authentication to register user in Firebase console
+      try {
+        final GoogleSignInAuthentication googleAuth = await account.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      } catch (firebaseError) {
+        print('Firebase Auth Error: $firebaseError');
+      }
+
       final response = await _httpClient.post(
         '/auth/google',
         body: {
@@ -318,6 +331,12 @@ class AuthService {
 
       if (response.statusCode == 200) {
         await _httpClient.clearToken();
+        try {
+          await _googleSignIn.signOut();
+          await FirebaseAuth.instance.signOut();
+        } catch (authErr) {
+          print('Error signing out from Google/Firebase: $authErr');
+        }
 
         return {
           'success': true,
@@ -332,6 +351,12 @@ class AuthService {
     } catch (e) {
       // Even if request fails, clear token locally
       await _httpClient.clearToken();
+      try {
+        await _googleSignIn.signOut();
+        await FirebaseAuth.instance.signOut();
+      } catch (authErr) {
+        print('Error signing out from Google/Firebase: $authErr');
+      }
       return _handleException(e);
     }
   }

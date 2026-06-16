@@ -269,6 +269,9 @@ class _ProfilePageState extends State<ProfilePage> {
           final photoUrl = user is Map
               ? (user['photo_url'] ?? user['photoUrl'])
               : (user?.photoUrl);
+          final authProvider = user is Map
+              ? (user['auth_provider'] ?? 'local')
+              : (user?.authProvider ?? 'local');
           
           // Format member since date
           String memberSinceText = 'Anggota sejak sekarang';
@@ -447,17 +450,29 @@ class _ProfilePageState extends State<ProfilePage> {
                               }
                             },
                           ),
-                          const SizedBox(height: 16),
+                          // const SizedBox(height: 16),
+                          // 
+                          // // Ganti Kata Sandi Card
+                          // _ProfileCard(
+                          //   value: 'Ganti Kata Sandi',
+                          //   icon: Icons.key_outlined,
+                          //   onTap: () => Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+                          //   ),
+                          // ),
                           
-                          // Ganti Kata Sandi Card
-                          _ProfileCard(
-                            value: 'Ganti Kata Sandi',
-                            icon: Icons.key_outlined,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+                          if (authProvider != 'google') ...[
+                            const SizedBox(height: 16),
+                            _ProfileCard(
+                              value: 'Ganti Kata Sandi',
+                              icon: Icons.key_outlined,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+                              ),
                             ),
-                          ),
+                          ],
                           
                           const Spacer(),
                           const SizedBox(height: 30),

@@ -7,6 +7,7 @@ import '../core/services/hotel_service.dart';
 import '../core/widgets/custom_dialog.dart';
 import '../core/widgets/hotel_card.dart';
 import '../location/location_service.dart';
+import '../notification/notification_page.dart';
 import 'select_room_page.dart';
 import 'nearby_hotel_page.dart';
 import 'search_page.dart';
@@ -200,7 +201,10 @@ class _ExplorePageState extends State<ExplorePage> {
             shape: BoxShape.circle,
           ),
           child: IconButton(
-            onPressed: () {},
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationPage()),
+            ),
             icon: const Icon(
               Icons.notifications_none_rounded,
               size: 22,
@@ -373,17 +377,17 @@ class _ExplorePageState extends State<ExplorePage> {
     final currentPermission = await Geolocator.checkPermission();
     final isGranted = currentPermission == LocationPermission.always || 
                       currentPermission == LocationPermission.whileInUse;
-
-    LocationPermission? finalPermission;
+    LocationPermission finalPermission;
 
     if (!isGranted) {
-      if (!context.mounted) return;
-      finalPermission = await showCustomLocationPermissionDialog(context);
+      try {
+        finalPermission = await Geolocator.requestPermission();
+      } catch (_) {
+        finalPermission = LocationPermission.denied;
+      }
     } else {
       finalPermission = currentPermission;
     }
-
-    if (finalPermission == null) return;
 
     if (finalPermission == LocationPermission.always || 
         finalPermission == LocationPermission.whileInUse) {
@@ -441,194 +445,6 @@ class _ExplorePageState extends State<ExplorePage> {
       );
     }
   }
-}
-
-Future<LocationPermission?> showCustomLocationPermissionDialog(BuildContext context) {
-  return showDialog<LocationPermission>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: Colors.white,
-        elevation: 6,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircleAvatar(
-                radius: 28,
-                backgroundColor: Color(0xFFEAF4FF),
-                child: Icon(
-                  Icons.location_on,
-                  color: AppColors.primaryBlue,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Izinkan PiliHotel mengakses lokasi perangkat ini?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E293B),
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Kami menggunakan lokasi Anda untuk menemukan hotel terdekat dan memberikan penawaran terbaik di sekitar Anda.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.muted,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CustomPaint(
-                        size: const Size(double.infinity, 120),
-                        painter: _MapGridPainter(),
-                      ),
-                      Container(
-                        width: 14,
-                        height: 14,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0F52BA),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.white,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              _dialogDivider(),
-              _dialogButton(
-                text: 'Saat Aplikasi Digunakan',
-                color: AppColors.primaryBlue,
-                bold: true,
-                onTap: () async {
-                  try {
-                    final permission = await Geolocator.requestPermission();
-                    if (context.mounted) {
-                      Navigator.pop(context, permission);
-                    }
-                  } catch (_) {
-                    if (context.mounted) {
-                      Navigator.pop(context, LocationPermission.denied);
-                    }
-                  }
-                },
-              ),
-              _dialogDivider(),
-              _dialogButton(
-                text: 'Hanya Sekali',
-                color: const Color(0xFF475569),
-                bold: false,
-                onTap: () async {
-                  try {
-                    final permission = await Geolocator.requestPermission();
-                    if (context.mounted) {
-                      Navigator.pop(context, permission);
-                    }
-                  } catch (_) {
-                    if (context.mounted) {
-                      Navigator.pop(context, LocationPermission.denied);
-                    }
-                  }
-                },
-              ),
-              _dialogDivider(),
-              _dialogButton(
-                text: 'Jangan Izinkan',
-                color: const Color(0xFFDC2626),
-                bold: false,
-                onTap: () {
-                  Navigator.pop(context, LocationPermission.denied);
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-Widget _dialogDivider() {
-  return Container(
-    height: 1,
-    width: double.infinity,
-    color: const Color(0xFFF1F5F9),
-  );
-}
-
-Widget _dialogButton({
-  required String text,
-  required Color color,
-  required bool bold,
-  required VoidCallback onTap,
-}) {
-  return InkWell(
-    onTap: onTap,
-    child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 13,
-          fontWeight: bold ? FontWeight.w900 : FontWeight.w600,
-        ),
-      ),
-    ),
-  );
-}
-
-class _MapGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.5)
-      ..strokeWidth = 2.0;
-
-    canvas.drawLine(Offset(0, size.height * 0.4), Offset(size.width, size.height * 0.5), paint);
-    canvas.drawLine(Offset(size.width * 0.3, 0), Offset(size.width * 0.4, size.height), paint);
-    canvas.drawLine(Offset(size.width * 0.7, 0), Offset(size.width * 0.6, size.height), paint);
-    canvas.drawLine(Offset(0, size.height * 0.75), Offset(size.width, size.height * 0.7), paint);
-    canvas.drawLine(Offset(0, size.height * 0.15), Offset(size.width, size.height * 0.1), paint);
-    canvas.drawLine(Offset(size.width * 0.1, 0), Offset(size.width * 0.2, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _SectionTitle extends StatelessWidget {

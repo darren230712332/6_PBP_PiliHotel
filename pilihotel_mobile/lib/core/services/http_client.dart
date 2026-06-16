@@ -40,18 +40,21 @@ class HttpClient {
       return 'http://127.0.0.1:8000/api';
     }
 
-    // 3. Android Emulator: 10.0.2.2 is the special alias for host machine's localhost
+    // 3. Android physical device/emulator on same WiFi
     if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api';
+      return 'http://192.168.100.51:8000/api';
     }
-
+    
     // 4. iOS Simulator: localhost resolves to host machine directly
     if (Platform.isIOS) {
-      return 'http://127.0.0.1:8000/api';
+      //return 'http://127.0.0.1:8000/api';
     }
 
     // 5. Fallback (macOS/Linux/Windows desktop)
-    return 'http://127.0.0.1:8000/api';
+    //return 'http://127.0.0.1:8000/api';
+
+    // 6. Android Emulator: 10.0.2.2 is the special alias for host machine's localhost
+    return 'http://10.0.2.2:8000/api';
   }
 
   static String get baseUrl => _baseUrl;
