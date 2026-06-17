@@ -107,7 +107,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           const SizedBox(height: 10),
           _PaymentMethodTile(
             icon: Icons.account_balance_wallet_outlined,
-            title: 'Grand Palace Wallet',
+            title: 'PiliHotel Wallet',
             subtitle: 'Saldo tersedia Rp5.250.000',
             selected: method == 'wallet',
             onTap: () => setState(() => method = 'wallet'),
@@ -179,7 +179,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 
     debugPrint('DEBUG_PAYMENT: Initiating payment for booking ID: ${widget.bookingId}');
     try {
-      final methodStr = method == 'wallet' ? 'Grand Palace Wallet' : 'Transfer Bank';
+      final methodStr = method == 'wallet' ? 'PiliHotel Wallet' : 'Transfer Bank';
       debugPrint('DEBUG_PAYMENT: Selected method: $methodStr');
       
       final booking = await _bookingService.payBooking(

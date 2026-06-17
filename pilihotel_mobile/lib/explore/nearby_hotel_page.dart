@@ -112,7 +112,6 @@ class _NearbyHotelPageState extends State<NearbyHotelPage> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.tune_rounded, color: AppColors.muted, size: 18),
                   ],
                 ),
               ),

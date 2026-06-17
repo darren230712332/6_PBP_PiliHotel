@@ -14,7 +14,7 @@ class ReviewController extends Controller
     {
         return response()->json([
             'data' => Review::query()
-                ->with(['hotel', 'room', 'booking.room'])
+                ->with(['hotel', 'room', 'booking.room', 'user'])
                 ->latest()
                 ->get(),
         ]);
@@ -64,7 +64,7 @@ class ReviewController extends Controller
 
         return response()->json([
             'message' => 'Ulasan berhasil disimpan.',
-            'data' => $review->load(['hotel', 'room', 'booking.room']),
+            'data' => $review->load(['hotel', 'room', 'booking.room', 'user']),
         ], 201);
     }
 
@@ -93,7 +93,7 @@ class ReviewController extends Controller
 
         return response()->json([
             'message' => 'Ulasan berhasil diperbarui.',
-            'data' => $review->load(['hotel', 'room', 'booking.room']),
+            'data' => $review->load(['hotel', 'room', 'booking.room', 'user']),
         ]);
     }
 

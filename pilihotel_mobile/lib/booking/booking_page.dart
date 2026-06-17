@@ -50,7 +50,9 @@ class _BookingPageState extends State<BookingPage> {
 
   int get roomTotal => _parsePrice(widget.hotel.price) * nights;
   int get extrasTotal =>
-      (breakfast ? 50000 : 0) + (massage ? 100000 : 0) + (lateCheckout ? 75000 : 0);
+      (breakfast ? 50000 : 0) +
+      (massage ? 100000 : 0) +
+      (lateCheckout ? 75000 : 0);
   int get total => roomTotal + extrasTotal;
 
   void _prevMonth() {
@@ -66,7 +68,11 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   void _onDayTapped(DateTime day) {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     if (day.isBefore(today)) return;
 
     setState(() {
@@ -86,28 +92,28 @@ class _BookingPageState extends State<BookingPage> {
     final firstDay = DateTime(month.year, month.month, 1);
     final prevMonthLastDay = DateTime(month.year, month.month, 0);
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
-    
+
     // Sunday starts week. In Dart, 7 is Sunday.
     final int startWeekday = firstDay.weekday == 7 ? 0 : firstDay.weekday;
-    
+
     final List<DateTime> days = [];
-    
+
     // Prev month padding
     for (int i = startWeekday - 1; i >= 0; i--) {
       days.add(DateTime(month.year, month.month - 1, prevMonthLastDay.day - i));
     }
-    
+
     // Current month days
     for (int i = 1; i <= daysInMonth; i++) {
       days.add(DateTime(month.year, month.month, i));
     }
-    
+
     // Next month padding to make exactly 42 grid items (6 weeks)
     final remainingCells = 42 - days.length;
     for (int i = 1; i <= remainingCells; i++) {
       days.add(DateTime(month.year, month.month + 1, i));
     }
-    
+
     return days;
   }
 
@@ -123,17 +129,26 @@ class _BookingPageState extends State<BookingPage> {
             children: [
               const Text(
                 'Pilih Tanggal',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.text),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.text,
+                ),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  stayRange == null ? 'Pilih Tanggal' : '$nights Malam Terpilih',
+                  stayRange == null
+                      ? 'Pilih Tanggal'
+                      : '$nights Malam Terpilih',
                   style: const TextStyle(
                     fontSize: 10,
                     color: AppColors.primaryBlue,
@@ -144,7 +159,7 @@ class _BookingPageState extends State<BookingPage> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Inline Calendar Widget Card
           Container(
             padding: const EdgeInsets.all(12),
@@ -168,7 +183,11 @@ class _BookingPageState extends State<BookingPage> {
           // Tingkatkan Pengalaman Menginap Section
           const Text(
             'Tingkatkan Pengalaman Menginap',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.text),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: AppColors.text,
+            ),
           ),
           const SizedBox(height: 10),
           _Option(
@@ -192,7 +211,7 @@ class _BookingPageState extends State<BookingPage> {
             selected: lateCheckout,
             onTap: () => setState(() => lateCheckout = !lateCheckout),
           ),
-          
+
           // Testimonial Section
           _buildTestimonialSection(),
 
@@ -220,11 +239,19 @@ class _BookingPageState extends State<BookingPage> {
               children: [
                 Text(
                   'Subtotal Menginap ($nights malam)',
-                  style: const TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Text(
                   _rupiah(roomTotal),
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.text),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
+                  ),
                 ),
               ],
             ),
@@ -235,11 +262,19 @@ class _BookingPageState extends State<BookingPage> {
                 children: [
                   const Text(
                     'Total Layanan Tambahan',
-                    style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: AppColors.muted,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   Text(
                     _rupiah(extrasTotal),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.text),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text,
+                    ),
                   ),
                 ],
               ),
@@ -252,7 +287,11 @@ class _BookingPageState extends State<BookingPage> {
               children: [
                 const Text(
                   'Total Keseluruhan',
-                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.text),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
                 ),
                 Text(
                   _rupiah(total),
@@ -293,7 +332,11 @@ class _BookingPageState extends State<BookingPage> {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.chevron_right, color: AppColors.text, size: 18),
+          icon: const Icon(
+            Icons.chevron_right,
+            color: AppColors.text,
+            size: 18,
+          ),
           onPressed: _nextMonth,
         ),
       ],
@@ -340,14 +383,24 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Widget _buildDayCell(DateTime day, bool isCurrentMonth) {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     final isPast = day.isBefore(today);
-    
-    final isStart = stayRange != null && DateUtils.isSameDay(day, stayRange!.start);
-    final isEnd = stayRange != null && DateUtils.isSameDay(day, stayRange!.end);
-    final isBetween = stayRange != null && day.isAfter(stayRange!.start) && day.isBefore(stayRange!.end);
 
-    Color textColor = isCurrentMonth ? AppColors.text : AppColors.muted.withValues(alpha: 0.5);
+    final isStart =
+        stayRange != null && DateUtils.isSameDay(day, stayRange!.start);
+    final isEnd = stayRange != null && DateUtils.isSameDay(day, stayRange!.end);
+    final isBetween =
+        stayRange != null &&
+        day.isAfter(stayRange!.start) &&
+        day.isBefore(stayRange!.end);
+
+    Color textColor = isCurrentMonth
+        ? AppColors.text
+        : AppColors.muted.withValues(alpha: 0.5);
     if (isStart || isEnd) {
       textColor = Colors.white;
     } else if (isBetween) {
@@ -392,7 +445,8 @@ class _BookingPageState extends State<BookingPage> {
         margin: const EdgeInsets.symmetric(vertical: 2),
         child: Stack(
           children: [
-            if (rangeBackground != null) Positioned.fill(child: rangeBackground),
+            if (rangeBackground != null)
+              Positioned.fill(child: rangeBackground),
             Center(
               child: Container(
                 width: 28,
@@ -407,8 +461,12 @@ class _BookingPageState extends State<BookingPage> {
                 child: Text(
                   '${day.day}',
                   style: TextStyle(
-                    color: isPast ? AppColors.muted.withValues(alpha: 0.35) : textColor,
-                    fontWeight: (isStart || isEnd || isBetween) ? FontWeight.bold : FontWeight.w500,
+                    color: isPast
+                        ? AppColors.muted.withValues(alpha: 0.35)
+                        : textColor,
+                    fontWeight: (isStart || isEnd || isBetween)
+                        ? FontWeight.bold
+                        : FontWeight.w500,
                     fontSize: 10.5,
                   ),
                 ),
@@ -430,7 +488,11 @@ class _BookingPageState extends State<BookingPage> {
           children: [
             const Text(
               'Apa kata tamu',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.text),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: AppColors.text,
+              ),
             ),
             TextButton(
               onPressed: () {},
@@ -488,7 +550,11 @@ class _BookingPageState extends State<BookingPage> {
                     backgroundColor: AppColors.primaryBlue,
                     child: Text(
                       'SM',
-                      style: TextStyle(fontSize: 7, color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 7,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -516,7 +582,11 @@ class _BookingPageState extends State<BookingPage> {
         const SizedBox(height: 22),
         const Text(
           'Metode Pembayaran',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.text),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: AppColors.text,
+          ),
         ),
         const SizedBox(height: 10),
         _buildPaymentCard(
@@ -573,11 +643,7 @@ class _BookingPageState extends State<BookingPage> {
               ),
             ),
             const SizedBox(width: 12),
-            Icon(
-              icon,
-              color: AppColors.primaryBlue,
-              size: 18,
-            ),
+            Icon(icon, color: AppColors.primaryBlue, size: 18),
             const SizedBox(width: 10),
             Text(
               title,
@@ -596,22 +662,30 @@ class _BookingPageState extends State<BookingPage> {
   Future<void> _createBookingAndPay(BuildContext context) async {
     if (stayRange == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih tanggal check-in dan check-out dulu.')),
+        const SnackBar(
+          content: Text('Pilih tanggal check-in dan check-out dulu.'),
+        ),
       );
       return;
     }
 
     setState(() => _loading = true);
-    showPiliLoadingDialog(context, message: 'Mencari kamar dan membuat booking...');
+    showPiliLoadingDialog(
+      context,
+      message: 'Mencari kamar dan membuat booking...',
+    );
 
     try {
       int? finalRoomId = widget.roomId;
 
       if (finalRoomId == null) {
-        debugPrint('DEBUG_BOOKING: roomId is null, searching hotel and room details...');
+        debugPrint(
+          'DEBUG_BOOKING: roomId is null, searching hotel and room details...',
+        );
         final hotels = await _hotelService.getHotels();
         final matchedHotel = hotels.firstWhere(
-          (hotel) => hotel.name.toLowerCase() == widget.hotel.name.toLowerCase(),
+          (hotel) =>
+              hotel.name.toLowerCase() == widget.hotel.name.toLowerCase(),
           orElse: () => hotels.first,
         );
 
@@ -641,7 +715,9 @@ class _BookingPageState extends State<BookingPage> {
         'check_out': _apiDate(stayRange!.end),
         'extras': extras,
       });
-      debugPrint('DEBUG_BOOKING: Booking created successfully. Booking ID: ${booking.id}');
+      debugPrint(
+        'DEBUG_BOOKING: Booking created successfully. Booking ID: ${booking.id}',
+      );
 
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
@@ -655,13 +731,14 @@ class _BookingPageState extends State<BookingPage> {
       );
     } catch (e) {
       debugPrint('DEBUG_BOOKING: Error caught: $e');
-      if (context.mounted && Navigator.of(context, rootNavigator: true).canPop()) {
+      if (context.mounted &&
+          Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal membuat booking: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal membuat booking: $e')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -682,8 +759,18 @@ class _BookingPageState extends State<BookingPage> {
 
   String _monthName(int month) {
     const names = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return names[month - 1];
   }
@@ -779,11 +866,7 @@ class _Option extends StatelessWidget {
                 ),
               ),
               child: selected
-                  ? const Icon(
-                      Icons.check,
-                      size: 13,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.check, size: 13, color: Colors.white)
                   : null,
             ),
           ],
