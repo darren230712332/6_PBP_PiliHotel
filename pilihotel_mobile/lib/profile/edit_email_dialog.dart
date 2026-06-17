@@ -20,7 +20,7 @@ Future<bool> showEditEmailDialog(
         builder: (context, setStateDialog) => Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 36),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16), //popupnya
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),

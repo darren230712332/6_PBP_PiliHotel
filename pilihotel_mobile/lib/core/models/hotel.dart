@@ -33,6 +33,7 @@ class Hotel {
   final double? latitude;
   final double? longitude;
   final List<Room>? rooms;
+  final int reviewsCount;
   final DateTime createdAt;
 
   Hotel({
@@ -47,6 +48,7 @@ class Hotel {
     this.latitude,
     this.longitude,
     this.rooms,
+    required this.reviewsCount,
     required this.createdAt,
   });
 
@@ -74,6 +76,7 @@ class Hotel {
       latitude: json['latitude'] != null ? _asDouble(json['latitude']) : null,
       longitude: json['longitude'] != null ? _asDouble(json['longitude']) : null,
       rooms: rooms,
+      reviewsCount: _asInt(json['reviews_count'] ?? json['reviewsCount']),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -93,6 +96,7 @@ class Hotel {
       'latitude': latitude,
       'longitude': longitude,
       'rooms': rooms?.map((room) => room.toJson()).toList(),
+      'reviews_count': reviewsCount,
       'created_at': createdAt.toIso8601String(),
     };
   }

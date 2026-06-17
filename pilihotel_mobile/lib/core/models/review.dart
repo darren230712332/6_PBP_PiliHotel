@@ -1,3 +1,5 @@
+import '../services/http_client.dart';
+
 int _asInt(dynamic value, [int defaultValue = 0]) {
   if (value is int) return value;
   if (value is num) return value.toInt();
@@ -16,6 +18,8 @@ class Review {
   final int rating;
   final String? comment;
   final List<String>? photos;
+  final String? userName;
+  final String? userPhotoUrl;
   final DateTime createdAt;
 
   Review({
@@ -27,6 +31,8 @@ class Review {
     required this.rating,
     this.comment,
     this.photos,
+    this.userName,
+    this.userPhotoUrl,
     required this.createdAt,
   });
 
@@ -49,6 +55,8 @@ class Review {
       rating: _asInt(json['rating']),
       comment: json['comment'],
       photos: photosList,
+      userName: json['user']?['name'],
+      userPhotoUrl: HttpClient.formatAssetUrl(json['user']?['photo_url']),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -65,6 +73,11 @@ class Review {
       'rating': rating,
       'comment': comment,
       'photos': photos,
+      if (userName != null || userPhotoUrl != null)
+        'user': {
+          if (userName != null) 'name': userName,
+          if (userPhotoUrl != null) 'photo_url': userPhotoUrl,
+        },
       'created_at': createdAt.toIso8601String(),
     };
   }

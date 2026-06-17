@@ -30,44 +30,64 @@ class DatabaseSeeder extends Seeder
 
         $hotels = [
             [
-                'name' => 'Grand Palace Hotel',
+                'name' => 'Eastparc Hotel Yogyakarta',
                 'location' => 'Yogyakarta, Indonesia',
-                'price_per_night' => 1500000,
-                'rating' => 4.8,
-                'image' => 'pool',
-                'distance' => '200 m',
-                'latitude' => -7.7955800,
-                'longitude' => 110.3694900,
-            ],
-            [
-                'name' => 'Urban Stay Suites',
-                'location' => 'Yogyakarta, Indonesia',
-                'price_per_night' => 720000,
-                'rating' => 4.6,
-                'image' => 'night',
-                'distance' => '1.2 km',
-                'latitude' => -7.7828100,
-                'longitude' => 110.3670700,
-            ],
-            [
-                'name' => 'Sea Breeze Resort',
-                'location' => 'Yogyakarta, Indonesia',
-                'price_per_night' => 2200000,
-                'rating' => 4.9,
-                'image' => 'sea',
-                'distance' => '800 m',
-                'latitude' => -7.8013900,
-                'longitude' => 110.3644400,
-            ],
-            [
-                'name' => 'The Heritage Inn',
-                'location' => 'Yogyakarta, Indonesia',
-                'price_per_night' => 980000,
+                'price_per_night' => 1200000,
                 'rating' => 4.7,
+                'image' => 'pool',
+                'distance' => '4.5 km',
+                'latitude' => -7.7828000,
+                'longitude' => 110.4153000,
+            ],
+            [
+                'name' => 'Yogyakarta Marriott Hotel',
+                'location' => 'Yogyakarta, Indonesia',
+                'price_per_night' => 2400000,
+                'rating' => 4.8,
+                'image' => 'modern',
+                'distance' => '5.2 km',
+                'latitude' => -7.7580000,
+                'longitude' => 110.4000000,
+            ],
+            [
+                'name' => 'Hotel Tentrem Yogyakarta',
+                'location' => 'Jetis, Yogyakarta',
+                'price_per_night' => 2100000,
+                'rating' => 4.8,
+                'image' => 'sea',
+                'distance' => '2.1 km',
+                'latitude' => -7.7780000,
+                'longitude' => 110.3680000,
+            ],
+            [
+                'name' => 'THE 1O1 Yogyakarta Tugu Hotel',
+                'location' => 'Jetis, Yogyakarta',
+                'price_per_night' => 978000,
+                'rating' => 4.6,
                 'image' => 'bed',
-                'distance' => '1.5 km',
-                'latitude' => -7.8080500,
-                'longitude' => 110.3705300,
+                'distance' => '1.2 km',
+                'latitude' => -7.7830000,
+                'longitude' => 110.3670000,
+            ],
+            [
+                'name' => 'Sahid Raya Hotel & Convention Yogyakarta',
+                'location' => 'Depok, Sleman',
+                'price_per_night' => 506000,
+                'rating' => 4.2,
+                'image' => 'night',
+                'distance' => '4.8 km',
+                'latitude' => -7.7758000,
+                'longitude' => 110.4153000,
+            ],
+            [
+                'name' => 'The Alana Yogyakarta Hotel & Convention Center',
+                'location' => 'Ngaglik, Sleman',
+                'price_per_night' => 808000,
+                'rating' => 4.5,
+                'image' => 'corridor',
+                'distance' => '6.0 km',
+                'latitude' => -7.7420000,
+                'longitude' => 110.3750000,
             ],
         ];
 
@@ -121,7 +141,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $hotel = Hotel::query()->where('name', 'Grand Palace Hotel')->firstOrFail();
+        $hotel = Hotel::query()->where('name', 'Eastparc Hotel Yogyakarta')->firstOrFail();
         $room = $hotel->rooms()->firstOrFail();
 
         $booking = Booking::query()->updateOrCreate(
@@ -156,9 +176,37 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
+        $booking2 = Booking::query()->updateOrCreate(
+            ['booking_code' => 'BH-9922'],
+            [
+                'user_id' => $user->id,
+                'hotel_id' => $hotel->id,
+                'room_id' => $room->id,
+                'check_in' => '2026-05-04',
+                'check_out' => '2026-05-06',
+                'nights' => 2,
+                'extras' => [],
+                'payment_method' => 'Transfer Bank',
+                'payment_status' => 'paid',
+                'status' => 'Selesai',
+                'total_price' => 2400000,
+            ],
+        );
+
+        Review::query()->updateOrCreate(
+            ['booking_id' => $booking2->id],
+            [
+                'hotel_id' => $hotel->id,
+                'room_id' => $room->id,
+                'user_id' => $user->id,
+                'rating' => 5,
+                'comment' => 'Sangat nyaman sekali! Pemandangan kolam renang indah.',
+            ],
+        );
+
         $extraBookings = [
-            ['code' => 'BH-AGD1', 'hotel' => 'Urban Stay Suites', 'room' => 'Executive Twin', 'nights' => 1, 'status' => 'Menunggu Pembayaran', 'payment_status' => 'pending'],
-            ['code' => 'BH-AGD2', 'hotel' => 'Sea Breeze Resort', 'room' => 'Family Room', 'nights' => 3, 'status' => 'Menunggu Check-in', 'payment_status' => 'paid'],
+            ['code' => 'BH-AGD1', 'hotel' => 'THE 1O1 Yogyakarta Tugu Hotel', 'room' => 'Executive Twin', 'nights' => 1, 'status' => 'Menunggu Pembayaran', 'payment_status' => 'pending'],
+            ['code' => 'BH-AGD2', 'hotel' => 'Hotel Tentrem Yogyakarta', 'room' => 'Family Room', 'nights' => 3, 'status' => 'Menunggu Check-in', 'payment_status' => 'paid'],
         ];
 
         foreach ($extraBookings as $item) {

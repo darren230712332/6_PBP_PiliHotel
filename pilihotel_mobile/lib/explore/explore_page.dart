@@ -122,16 +122,19 @@ class _ExplorePageState extends State<ExplorePage> {
             rating: hotel.rating,
             image: _mapHotelImageKey(hotel.name, hotel.image),
             distance: hotel.distance,
+            reviewsCount: hotel.reviewsCount,
           ),
         )
         .toList();
   }
 
   String _mapHotelImageKey(String hotelName, String originalKey) {
-    if (hotelName.contains('Grand Palace')) return 'sea';
-    if (hotelName.contains('Urban Stay')) return 'modern';
-    if (hotelName.contains('Sea Breeze')) return 'pool';
-    if (hotelName.contains('The Heritage') || hotelName.contains('Heritage')) return 'corridor';
+    if (hotelName.contains('Eastparc')) return 'pool';
+    if (hotelName.contains('Marriott')) return 'modern';
+    if (hotelName.contains('Tentrem')) return 'sea';
+    if (hotelName.contains('1O1')) return 'bed';
+    if (hotelName.contains('Sahid')) return 'night';
+    if (hotelName.contains('Alana')) return 'corridor';
     return originalKey;
   }
 
@@ -141,13 +144,13 @@ class _ExplorePageState extends State<ExplorePage> {
     final popularHotels = <UiHotel>[];
 
     if (hotels.isNotEmpty) {
-      final grandPalace = hotels.firstWhere((h) => h.name.contains('Grand Palace'), orElse: () => hotels[0]);
-      final urbanStay = hotels.firstWhere((h) => h.name.contains('Urban Stay'), orElse: () => hotels.length > 1 ? hotels[1] : hotels[0]);
-      final seaBreeze = hotels.firstWhere((h) => h.name.contains('Sea Breeze'), orElse: () => hotels.length > 2 ? hotels[2] : hotels[0]);
-      final heritage = hotels.firstWhere((h) => h.name.contains('The Heritage') || h.name.contains('Heritage'), orElse: () => hotels.length > 3 ? hotels[3] : hotels[0]);
+      final eastparc = hotels.firstWhere((h) => h.name.contains('Eastparc'), orElse: () => hotels[0]);
+      final marriott = hotels.firstWhere((h) => h.name.contains('Marriott'), orElse: () => hotels.length > 1 ? hotels[1] : hotels[0]);
+      final tentrem = hotels.firstWhere((h) => h.name.contains('Tentrem'), orElse: () => hotels.length > 2 ? hotels[2] : hotels[0]);
+      final tugu101 = hotels.firstWhere((h) => h.name.contains('1O1'), orElse: () => hotels.length > 3 ? hotels[3] : hotels[0]);
 
-      featuredHotels.addAll([grandPalace, urbanStay]);
-      popularHotels.addAll([seaBreeze, heritage]);
+      featuredHotels.addAll([eastparc, marriott]);
+      popularHotels.addAll([tentrem, tugu101]);
     }
 
     return ListView(
@@ -243,20 +246,16 @@ class _ExplorePageState extends State<ExplorePage> {
                   color: AppColors.primaryBlue,
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  locationLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
+                Expanded(
+                  child: Text(
+                    locationLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.muted,
-                  size: 20,
                 ),
               ],
             );
@@ -352,14 +351,21 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   /// Build popular hotels vertical list
+  String _formatReviewCount(int count) {
+    if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1).replaceAll('.0', '')}rb';
+    }
+    return count.toString();
+  }
+
+  /// Build popular hotels vertical list
   Widget _buildPopularHotels(BuildContext context, List<UiHotel> hotels) {
     return Column(
       children: [
         for (final hotel in hotels)
           _PopularHotelCard(
             hotel: hotel,
-            distance: hotel.distance,
-            reviewCount: hotel.name.contains('Sea Breeze') ? '1.2rb' : '850',
+            reviewCount: _formatReviewCount(hotel.reviewsCount),
             onTap: () => _openDetail(context, hotel),
           ),
       ],
@@ -556,13 +562,11 @@ class _FeaturedHotelCard extends StatelessWidget {
 class _PopularHotelCard extends StatelessWidget {
   const _PopularHotelCard({
     required this.hotel,
-    required this.distance,
     required this.reviewCount,
     required this.onTap,
   });
 
   final UiHotel hotel;
-  final String distance;
   final String reviewCount;
   final VoidCallback onTap;
 
@@ -615,21 +619,6 @@ class _PopularHotelCard extends StatelessWidget {
                           fontSize: 10,
                           color: AppColors.muted,
                           fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Text(
-                        ' • ',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: AppColors.muted,
-                        ),
-                      ),
-                      Text(
-                        distance,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
