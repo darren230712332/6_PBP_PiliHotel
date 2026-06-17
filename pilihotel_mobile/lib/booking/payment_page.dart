@@ -203,13 +203,6 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           stayInfo: stayInfoString,
           image: widget.hotel.image,
         );
-        await NotificationService().triggerDemoNotification(
-          bookingId: booking.id,
-          hotelName: widget.hotel.name,
-          stayInfo: stayInfoString,
-          image: widget.hotel.image,
-          delaySeconds: 5,
-        );
       } catch (notifErr) {
         debugPrint('DEBUG_PAYMENT: Failed to schedule notifications: $notifErr');
       }

@@ -27,7 +27,7 @@ class UiHotel {
 const hotels = [
   UiHotel(
     name: 'Eastparc Hotel Yogyakarta',
-    location: 'Sleman, Yogyakarta',
+    location: 'Yogyakarta, Indonesia',
     price: 'Rp1.200.000',
     rating: 4.7,
     image: 'pool',
@@ -35,7 +35,7 @@ const hotels = [
   ),
   UiHotel(
     name: 'Yogyakarta Marriott Hotel',
-    location: 'Depok, Sleman',
+    location: 'Yogyakarta, Indonesia',
     price: 'Rp2.400.000',
     rating: 4.8,
     image: 'modern',

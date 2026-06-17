@@ -58,6 +58,7 @@ class AuthService {
     required String email,
     required String password,
     required String passwordConfirmation,
+    File? photo,
   }) async {
     try {
       final response = await _httpClient.post(
@@ -75,6 +76,17 @@ class AuthService {
         final authResponse = AuthResponse.fromJson(
           jsonDecode(response.body) as Map<String, dynamic>,
         );
+
+        if (photo != null) {
+          try {
+            await _httpClient.saveToken(authResponse.token);
+            await uploadPhoto(photo: photo);
+          } catch (e) {
+            debugPrint('Error uploading photo during registration: $e');
+          } finally {
+            await _httpClient.clearToken();
+          }
+        }
 
         return {
           'success': true,
