@@ -331,8 +331,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     if (value.contains('wifi')) return Icons.wifi;
     if (value.contains('ac')) return Icons.ac_unit;
     if (value.contains('tv')) return Icons.tv;
-    if (value.contains('kopi') || value.contains('teh'))
+    if (value.contains('kopi') || value.contains('teh')) {
       return Icons.local_cafe_outlined;
+    }
     if (value.contains('sarapan')) return Icons.restaurant_outlined;
     if (value.contains('kulkas')) return Icons.kitchen_outlined;
     return Icons.check_circle_outline;
@@ -513,8 +514,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
     if (parts.isEmpty || parts[0].isEmpty) return 'U';
-    if (parts.length == 1)
+    if (parts.length == 1) {
       return parts[0].substring(0, min(1, parts[0].length)).toUpperCase();
+    }
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 

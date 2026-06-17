@@ -512,6 +512,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 6),
                           _ProfileCard(
+                            //phone
                             value: phone.isNotEmpty ? phone : 'Belum diatur',
                             onTap: () async {
                               final updated = await showEditPhoneDialog(
