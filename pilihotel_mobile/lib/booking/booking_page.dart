@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/colors.dart';
 import '../core/services/booking_service.dart';
@@ -718,6 +719,15 @@ class _BookingPageState extends State<BookingPage> {
       debugPrint(
         'DEBUG_BOOKING: Booking created successfully. Booking ID: ${booking.id}',
       );
+
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final list = prefs.getStringList('simulated_completed_bookings') ?? [];
+        if (list.contains(booking.id.toString())) {
+          list.remove(booking.id.toString());
+          await prefs.setStringList('simulated_completed_bookings', list);
+        }
+      } catch (_) {}
 
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();

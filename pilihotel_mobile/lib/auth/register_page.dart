@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/colors.dart';
 import '../core/services/auth_service.dart';
@@ -15,6 +18,9 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final AuthService _authService = AuthService();
+  final ImagePicker _imagePicker = ImagePicker();
+  File? selectedImageFile;
+
   String name = '';
   String phone = '';
   String email = '';
@@ -24,6 +30,83 @@ class _RegisterPageState extends State<RegisterPage> {
   bool hidePasswordConfirmation = true;
   bool agreedToTerms = false;
   bool loading = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    final result = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 600,
+      maxHeight: 600,
+      imageQuality: 60,
+    );
+    if (result != null) {
+      setState(() {
+        selectedImageFile = File(result.path);
+      });
+    }
+  }
+
+  Future<void> _chooseImageSource() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              const Text(
+                'Pilih Sumber Foto',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: _AnimatedPhotoButton(
+                      icon: Icons.camera_alt,
+                      label: 'Ambil Foto',
+                      onTap: () => Navigator.pop(context, ImageSource.camera),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _AnimatedPhotoButton(
+                      icon: Icons.image,
+                      label: 'Dari Galeri',
+                      onTap: () => Navigator.pop(context, ImageSource.gallery),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFEEEE),
+                    foregroundColor: AppColors.danger,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Batal'),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source != null) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      await _pickImage(source);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,25 +124,57 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             children: [
               const SizedBox(height: 12),
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  Container(
-                    width: 84,
-                    height: 84,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF7BA5), Color(0xFFFFD36D)],
+              GestureDetector(
+                onTap: _chooseImageSource,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      width: 84,
+                      height: 84,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFFE2E8F0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: selectedImageFile != null
+                            ? Image.file(
+                                selectedImageFile!,
+                                width: 84,
+                                height: 84,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFFFF7BA5),
+                                      Color(0xFFFFD36D)
+                                    ],
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
-                  ),
-                  const CircleAvatar(
-                    radius: 13,
-                    backgroundColor: AppColors.primaryBlue,
-                    child: Icon(Icons.add, color: Colors.white, size: 15),
-                  ),
-                ],
+                    CircleAvatar(
+                      radius: 13,
+                      backgroundColor: AppColors.primaryBlue,
+                      child: Icon(
+                        selectedImageFile != null ? Icons.edit : Icons.add,
+                        color: Colors.white,
+                        size: 15,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -229,6 +344,7 @@ class _RegisterPageState extends State<RegisterPage> {
       email: email,
       password: password,
       passwordConfirmation: passwordConfirmation,
+      photo: selectedImageFile,
     );
 
     if (!mounted) return;
@@ -248,5 +364,78 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       );
     }
+  }
+}
+
+class _AnimatedPhotoButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _AnimatedPhotoButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedPhotoButton> createState() => _AnimatedPhotoButtonState();
+}
+
+class _AnimatedPhotoButtonState extends State<_AnimatedPhotoButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onTap() async {
+    await _controller.forward();
+    await _controller.reverse();
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(widget.icon, size: 32, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

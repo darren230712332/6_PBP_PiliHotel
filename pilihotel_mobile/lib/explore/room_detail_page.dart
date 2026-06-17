@@ -679,26 +679,67 @@ class _ReviewPhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visiblePhotos = photos.take(2).toList();
+    if (photos.isEmpty) return const SizedBox.shrink();
 
-    if (visiblePhotos.isEmpty) return const SizedBox.shrink();
-
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        for (final photo in visiblePhotos) ...[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Image.network(
-              photo,
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(width: 50, height: 50, color: Colors.grey[200]),
+        for (final photo in photos)
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.all(10),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      InteractiveViewer(
+                        maxScale: 4.0,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            photo,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  color: Colors.white,
+                                  child: const Text('Gagal memuat gambar'),
+                                ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black.withValues(alpha: 0.5),
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                photo,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(width: 50, height: 50, color: Colors.grey[200]),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-        ],
       ],
     );
   }

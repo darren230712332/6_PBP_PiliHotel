@@ -12,6 +12,7 @@ import '../core/widgets/loading_dialog.dart';
 import 'change_password_page.dart';
 import 'edit_name_dialog.dart';
 import 'edit_email_dialog.dart';
+import 'edit_phone_dialog.dart';
 import 'logout_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -271,6 +272,9 @@ class _ProfilePageState extends State<ProfilePage> {
           final email = user is Map
               ? (user['email'] ?? '')
               : (user?.email ?? '');
+          final phone = user is Map
+              ? (user['phone'] ?? '')
+              : (user?.phone ?? '');
           final photoUrl = user is Map
               ? (user['photo_url'] ?? user['photoUrl'])
               : (user?.photoUrl);
@@ -486,6 +490,33 @@ class _ProfilePageState extends State<ProfilePage> {
                               final updated = await showEditEmailDialog(
                                 context,
                                 currentEmail: email?.toString() ?? '',
+                              );
+                              if (updated == true) {
+                                _refreshProfile();
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Nomor Telepon Card
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Nomor Telepon',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.text.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _ProfileCard(
+                            value: phone.isNotEmpty ? phone : 'Belum diatur',
+                            onTap: () async {
+                              final updated = await showEditPhoneDialog(
+                                context,
+                                currentPhone: phone,
                               );
                               if (updated == true) {
                                 _refreshProfile();
