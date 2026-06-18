@@ -1,4 +1,4 @@
-PiliHotel adalah aplikasi pemesanan (booking) hotel berbasis mobile yang dirancang untuk memudahkan pengguna dalam mencari hotel, memesan kamar secara real-time, mengelola profil, memberikan review, serta mendapatkan tiket booking berformat PDF.
+PiliHotel adalah aplikasi pemesanan (booking) hotel berbasis mobile yang dirancang untuk memudahkan pengguna dalam mencari hotel, memesan kamar secara real-time, mengelola profil, memberikan review, serta mendapatkan bukti booking berformat PDF.
 
 Aplikasi ini menggunakan arsitektur Client-Server dengan memisahkan bagian Backend (Laravel) dan Frontend Mobile (Flutter).
 
