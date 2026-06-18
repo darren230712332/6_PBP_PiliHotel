@@ -64,14 +64,7 @@ class _OrderPageState extends State<OrderPage> {
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: AppColors.text,
-            size: 18,
-          ),
-          onPressed: () => Navigator.maybePop(context),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: FutureBuilder<List<api.Booking>>(
         future: _bookingsFuture,

@@ -33,7 +33,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final roomName = widget.room.name == 'Deluxe King Room' ? 'Deluxe King Suite' : widget.room.name;
+    final roomName = widget.room.name == 'Deluxe King Room'
+        ? 'Deluxe King Suite'
+        : widget.room.name;
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Detail Kamar'),
@@ -44,7 +46,10 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
             height: 230,
             child: PageView(
               children: [
-                for (final photo in (widget.room.photos.isNotEmpty ? widget.room.photos : [widget.hotel.image]))
+                for (final photo
+                    in (widget.room.photos.isNotEmpty
+                        ? widget.room.photos
+                        : [widget.hotel.image]))
                   HotelImage(kind: photo, height: 230, width: double.infinity),
               ],
             ),
@@ -93,7 +98,8 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            widget.room.description ?? 'Kamar luas dengan pencahayaan hangat, kasur nyaman, kamar mandi privat, dan suasana tenang untuk istirahat maksimal.',
+            widget.room.description ??
+                'Kamar luas dengan pencahayaan hangat, kasur nyaman, kamar mandi privat, dan suasana tenang untuk istirahat maksimal.',
             style: const TextStyle(
               fontSize: 12,
               height: 1.55,
@@ -108,7 +114,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
           const SizedBox(height: 10),
           Row(
             children: [
-              for (final facility in (widget.room.facilities ?? ['WiFi', 'AC', 'TV', 'Kopi']).take(4))
+              for (final facility
+                  in (widget.room.facilities ?? ['WiFi', 'AC', 'TV', 'Kopi'])
+                      .take(4))
                 _Facility(
                   icon: _facilityIcon(facility),
                   label: _mapFacilityLabel(facility),
@@ -117,48 +125,71 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
             ],
           ),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Ulasan Pengguna',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
-                  const SizedBox(width: 3),
-                  const Text(
-                    '4.8',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _showAllReviews ? '(3 ulasan)' : '(124 ulasan)',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           FutureBuilder<List<api_review.Review>>(
             future: _reviewsFuture,
             builder: (context, snapshot) {
-              final reviews = (snapshot.data ?? [])
+              final apiReviews = (snapshot.data ?? [])
                   .where((review) => review.roomId == widget.room.id)
                   .toList();
+              final allReviews = _getAllReviews(apiReviews);
+
+              final totalReviews = allReviews.length;
+              final double avgRating = allReviews.isEmpty
+                  ? 0.0
+                  : allReviews.map((r) => r['rating'] as double).reduce((a, b) => a + b) / totalReviews;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: _buildReviewCards(reviews),
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Ulasan Pengguna',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
+                          const SizedBox(width: 3),
+                          Text(
+                            avgRating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.text,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '($totalReviews ulasan)',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (allReviews.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Text(
+                          'Belum ada ulasan untuk kamar ini',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ..._buildReviewCards(allReviews),
+                ],
               );
             },
           ),
@@ -168,7 +199,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 12),
-          const _MockMapView(),
+          _MockMapView(hotelName: widget.hotel.name),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,7 +261,8 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Rp${widget.room.pricePerNight.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
+                          text:
+                              'Rp${widget.room.pricePerNight.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
@@ -258,7 +290,8 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                 iconOnRight: true,
                 onPressed: () {
                   final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
-                  final formattedPrice = 'Rp${widget.room.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
+                  final formattedPrice =
+                      'Rp${widget.room.pricePerNight.toString().replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -298,7 +331,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     if (value.contains('wifi')) return Icons.wifi;
     if (value.contains('ac')) return Icons.ac_unit;
     if (value.contains('tv')) return Icons.tv;
-    if (value.contains('kopi') || value.contains('teh')) return Icons.local_cafe_outlined;
+    if (value.contains('kopi') || value.contains('teh')) {
+      return Icons.local_cafe_outlined;
+    }
     if (value.contains('sarapan')) return Icons.restaurant_outlined;
     if (value.contains('kulkas')) return Icons.kitchen_outlined;
     return Icons.check_circle_outline;
@@ -310,55 +345,45 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     );
   }
 
-  List<Widget> _buildReviewCards(List<api_review.Review> apiReviews) {
+  String _formatReviewDate(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inDays == 0) {
+      if (diff.inHours == 0) {
+        if (diff.inMinutes == 0) {
+          return 'Baru saja';
+        }
+        return '${diff.inMinutes} menit yang lalu';
+      }
+      return '${diff.inHours} jam yang lalu';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays} hari yang lalu';
+    }
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  List<Map<String, dynamic>> _getAllReviews(List<api_review.Review> apiReviews) {
     final List<Map<String, dynamic>> allReviews = [];
 
     // Prepend API reviews
     for (final review in apiReviews) {
       allReviews.add({
-        'name': 'Tamu PiliHotel',
+        'name': review.userName ?? 'Tamu PiliHotel',
         'rating': review.rating.toDouble(),
         'text': review.comment ?? 'Tamu belum menambahkan komentar.',
         'photos': review.photos ?? <String>[],
-        'date': 'Baru saja',
+        'date': _formatReviewDate(review.createdAt),
+        'photo_url': review.userPhotoUrl,
       });
     }
 
-    // Append mock reviews
-    allReviews.addAll([
-      {
-        'name': 'Jane Doe',
-        'rating': 4.8,
-        'text': 'Pemandangannya luar biasa! Kamar sangat bersih dan staf di PiliHotel sangat membantu selama saya menginap. Sangat direkomendasikan untuk perjalanan bisnis.',
-        'photos': <String>[
-          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'
-        ],
-        'date': '2 hari yang lalu',
-      },
-      {
-        'name': 'Ahmad Riski',
-        'rating': 4.5,
-        'text': 'Saya sangat puas menginap di hotel ini. Lokasinya strategis, dekat dengan pusat kota dan mudah dijangkau. Kamar bersih, nyaman, dan fasilitas lengkap seperti WiFi cepat, AC dingin, serta kamar mandi yang terawat. Pelayanan staf juga sangat ramah dan responsif. Sarapan pagi cukup variatif dan rasanya enak. Sangat direkomendasikan untuk liburan maupun perjalanan bisnis!',
-        'photos': <String>[
-          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'
-        ],
-        'date': '2 hari yang lalu',
-      },
-      {
-        'name': 'Joko Rino',
-        'rating': 4.7,
-        'text': 'Pemandangannya luar biasa! Kamar sangat bersih dan staf di PiliHotel sangat membantu selama saya menginap. Sangat direkomendasikan untuk perjalanan bisnis.',
-        'photos': <String>[
-          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'
-        ],
-        'date': '2 hari yang lalu',
-      },
-    ]);
+    return allReviews;
+  }
 
-    final visibleReviews = _showAllReviews ? allReviews : allReviews.take(1).toList();
+  List<Widget> _buildReviewCards(List<Map<String, dynamic>> allReviews) {
+    final visibleReviews = _showAllReviews
+        ? allReviews
+        : allReviews.take(1).toList();
 
     return [
       for (int i = 0; i < visibleReviews.length; i++) ...[
@@ -380,17 +405,46 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: const Color(0xFFEAF4FF),
-                    child: Text(
-                      _getInitials(visibleReviews[i]['name'] as String),
-                      style: const TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final photoUrl = visibleReviews[i]['photo_url'] as String?;
+                      final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+
+                      return Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEAF4FF),
+                          shape: BoxShape.circle,
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: hasPhoto
+                            ? Image.network(
+                                photoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Center(
+                                  child: Text(
+                                    _getInitials(visibleReviews[i]['name'] as String),
+                                    style: const TextStyle(
+                                      color: AppColors.primaryBlue,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  _getInitials(visibleReviews[i]['name'] as String),
+                                  style: const TextStyle(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                      );
+                    },
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -418,9 +472,11 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                   Row(
                     children: List.generate(
                       5,
-                      (index) => const Icon(
+                      (index) => Icon(
                         Icons.star_rounded,
-                        color: AppColors.warning,
+                        color: index < (visibleReviews[i]['rating'] as num).round()
+                            ? AppColors.warning
+                            : Colors.grey[300],
                         size: 14,
                       ),
                     ),
@@ -437,7 +493,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              _ReviewPhotos(photos: List<String>.from(visibleReviews[i]['photos'] as List)),
+              _ReviewPhotos(
+                photos: List<String>.from(visibleReviews[i]['photos'] as List),
+              ),
             ],
           ),
         ),
@@ -456,7 +514,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
     if (parts.isEmpty || parts[0].isEmpty) return 'U';
-    if (parts.length == 1) return parts[0].substring(0, min(1, parts[0].length)).toUpperCase();
+    if (parts.length == 1) {
+      return parts[0].substring(0, min(1, parts[0].length)).toUpperCase();
+    }
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
@@ -544,7 +604,9 @@ class _Spec extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.12)),
+            border: Border.all(
+              color: AppColors.primaryBlue.withValues(alpha: 0.12),
+            ),
           ),
           child: Column(
             children: [
@@ -619,36 +681,76 @@ class _ReviewPhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visiblePhotos = photos.take(2).toList();
+    if (photos.isEmpty) return const SizedBox.shrink();
 
-    if (visiblePhotos.isEmpty) return const SizedBox.shrink();
-
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        for (final photo in visiblePhotos) ...[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Image.network(
-              photo,
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
+        for (final photo in photos)
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.all(10),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      InteractiveViewer(
+                        maxScale: 4.0,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            photo,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  color: Colors.white,
+                                  child: const Text('Gagal memuat gambar'),
+                                ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black.withValues(alpha: 0.5),
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                photo,
                 width: 50,
                 height: 50,
-                color: Colors.grey[200],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(width: 50, height: 50, color: Colors.grey[200]),
               ),
             ),
           ),
-          const SizedBox(width: 8),
-        ],
       ],
     );
   }
 }
 
 class _MockMapView extends StatelessWidget {
-  const _MockMapView();
+  const _MockMapView({required this.hotelName});
+
+  final String hotelName;
 
   @override
   Widget build(BuildContext context) {
@@ -764,7 +866,11 @@ class _MockMapView extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.shopping_cart, color: Colors.orange, size: 10),
+                    const Icon(
+                      Icons.shopping_cart,
+                      color: Colors.orange,
+                      size: 10,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Supermarket',
@@ -798,7 +904,11 @@ class _MockMapView extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.local_hospital_outlined, color: Colors.grey[400], size: 10),
+                    Icon(
+                      Icons.local_hospital_outlined,
+                      color: Colors.grey[400],
+                      size: 10,
+                    ),
                     const SizedBox(width: 4),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -855,7 +965,10 @@ class _MockMapView extends StatelessWidget {
               left: 68,
               top: 68,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue,
                   borderRadius: BorderRadius.circular(6),
@@ -868,9 +981,9 @@ class _MockMapView extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Grand Palace Hotel',
-                  style: TextStyle(
+                child: Text(
+                  hotelName,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -921,7 +1034,11 @@ class _MockMapView extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.my_location, size: 14, color: AppColors.primaryBlue),
+                child: const Icon(
+                  Icons.my_location,
+                  size: 14,
+                  color: AppColors.primaryBlue,
+                ),
               ),
             ),
             // Zoom buttons on bottom right
@@ -968,7 +1085,11 @@ class _MockMapView extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.layers_outlined, size: 14, color: Colors.grey),
+                child: const Icon(
+                  Icons.layers_outlined,
+                  size: 14,
+                  color: Colors.grey,
+                ),
               ),
             ),
           ],

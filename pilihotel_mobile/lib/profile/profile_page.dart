@@ -12,6 +12,7 @@ import '../core/widgets/loading_dialog.dart';
 import 'change_password_page.dart';
 import 'edit_name_dialog.dart';
 import 'edit_email_dialog.dart';
+import 'edit_phone_dialog.dart';
 import 'logout_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -232,7 +233,11 @@ class _ProfilePageState extends State<ProfilePage> {
         centerTitle: true,
         leading: Navigator.canPop(context)
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.text, size: 20),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: AppColors.text,
+                  size: 20,
+                ),
                 onPressed: () => Navigator.pop(context),
               )
             : null,
@@ -246,10 +251,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: const Color(0xFFF1F3F6),
-            height: 1,
-          ),
+          child: Container(color: const Color(0xFFF1F3F6), height: 1),
         ),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -264,21 +266,30 @@ class _ProfilePageState extends State<ProfilePage> {
           }
 
           final user = snapshot.data?['user'];
-          final name = user is Map ? (user['name'] ?? 'Nama Lengkap') : (user?.name ?? 'Nama Lengkap');
-          final email = user is Map ? (user['email'] ?? '') : (user?.email ?? '');
+          final name = user is Map
+              ? (user['name'] ?? 'Nama Lengkap')
+              : (user?.name ?? 'Nama Lengkap');
+          final email = user is Map
+              ? (user['email'] ?? '')
+              : (user?.email ?? '');
+          final phone = user is Map
+              ? (user['phone'] ?? '')
+              : (user?.phone ?? '');
           final photoUrl = user is Map
               ? (user['photo_url'] ?? user['photoUrl'])
               : (user?.photoUrl);
           final authProvider = user is Map
               ? (user['auth_provider'] ?? 'local')
               : (user?.authProvider ?? 'local');
-          
+
           // Format member since date
           String memberSinceText = 'Anggota sejak sekarang';
           final createdAt = user is Map ? user['created_at'] : user?.createdAt;
           if (createdAt != null) {
             try {
-              final date = createdAt is String ? DateTime.parse(createdAt) : createdAt;
+              final date = createdAt is String
+                  ? DateTime.parse(createdAt)
+                  : createdAt;
               final monthYear = DateFormat('MMMM yyyy').format(date);
               memberSinceText = 'Anggota sejak $monthYear';
             } catch (e) {
@@ -291,12 +302,13 @@ class _ProfilePageState extends State<ProfilePage> {
               return SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
-                  ),
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: IntrinsicHeight(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 26,
+                      ),
                       child: Column(
                         children: [
                           const SizedBox(height: 10),
@@ -307,7 +319,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.06),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.06,
+                                      ),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     ),
@@ -325,17 +339,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                             height: 96,
                                             fit: BoxFit.cover,
                                           )
-                                        : (photoUrl != null && photoUrl.isNotEmpty)
-                                            ? Image.network(
-                                                photoUrl,
-                                                width: 96,
-                                                height: 96,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
+                                        : (photoUrl != null &&
+                                              photoUrl.isNotEmpty)
+                                        ? Image.network(
+                                            photoUrl,
+                                            width: 96,
+                                            height: 96,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
                                                   return Container(
                                                     width: 96,
                                                     height: 96,
-                                                    color: const Color(0xFFE2E8F0),
+                                                    color: const Color(
+                                                      0xFFE2E8F0,
+                                                    ),
                                                     child: const Icon(
                                                       Icons.person,
                                                       size: 48,
@@ -343,17 +361,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                                     ),
                                                   );
                                                 },
-                                              )
-                                            : Container(
-                                                width: 96,
-                                                height: 96,
-                                                color: const Color(0xFFE2E8F0),
-                                                child: const Icon(
-                                                  Icons.person,
-                                                  size: 48,
-                                                  color: Color(0xFF94A3B8),
-                                                ),
-                                              ),
+                                          )
+                                        : Container(
+                                            width: 96,
+                                            height: 96,
+                                            color: const Color(0xFFE2E8F0),
+                                            child: const Icon(
+                                              Icons.person,
+                                              size: 48,
+                                              color: Color(0xFF94A3B8),
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -397,7 +415,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                           const SizedBox(height: 30),
-                          
+
                           // Nama Lengkap Card
                           Align(
                             alignment: Alignment.centerLeft,
@@ -413,6 +431,20 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 6),
                           _ProfileCard(
                             value: name?.toString() ?? '',
+                            // // BORDER RADIUS UNTUK NAMA LENGKAP
+                            // borderRadius: BorderRadius.circular(150),
+
+                            // // WARNA BACKGROUND KARTU NAMA LENGKAP
+                            // backgroundColor: const Color(0xFFF8FAFD),
+
+                            // // WARNA GARIS TEPI / BORDER KARTU NAMA LENGKAP
+                            // borderColor: const Color(0xFFE7EEF7),
+
+                            // // WARNA TEKS KARTU NAMA LENGKAP
+                            // textColor: AppColors.text,
+
+                            // // WARNA CHEVRON (PANAH) KARTU NAMA LENGKAP
+                            // chevronColor: AppColors.muted,
                             onTap: () async {
                               final updated = await showEditNameDialog(
                                 context,
@@ -424,7 +456,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             },
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Alamat Email Card
                           Align(
                             alignment: Alignment.centerLeft,
@@ -439,6 +471,20 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 6),
                           _ProfileCard(
+                            // // BORDER RADIUS UNTUK EMAIL
+                            // borderRadius: BorderRadius.circular(150),
+
+                            // // WARNA BACKGROUND KARTU EMAIL
+                            // backgroundColor: const Color(0xFFF8FAFD),
+
+                            // // WARNA GARIS TEPI / BORDER KARTU EMAIL
+                            // borderColor: const Color(0xFFE7EEF7),
+
+                            // // WARNA TEKS KARTU EMAIL
+                            // textColor: AppColors.text,
+
+                            // // WARNA CHEVRON (PANAH) KARTU EMAIL
+                            // chevronColor: AppColors.muted,
                             value: email?.toString() ?? '',
                             onTap: () async {
                               final updated = await showEditEmailDialog(
@@ -450,33 +496,71 @@ class _ProfilePageState extends State<ProfilePage> {
                               }
                             },
                           ),
-                          // const SizedBox(height: 16),
-                          // 
-                          // // Ganti Kata Sandi Card
-                          // _ProfileCard(
-                          //   value: 'Ganti Kata Sandi',
-                          //   icon: Icons.key_outlined,
-                          //   onTap: () => Navigator.push(
-                          //     context,
-                          //     MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
-                          //   ),
-                          // ),
-                          
+                          const SizedBox(height: 16),
+
+                          // Nomor Telepon Card
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Nomor Telepon',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.text.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _ProfileCard(
+                            //phone
+                            value: phone.isNotEmpty ? phone : 'Belum diatur',
+                            onTap: () async {
+                              final updated = await showEditPhoneDialog(
+                                context,
+                                currentPhone: phone,
+                              );
+                              if (updated == true) {
+                                _refreshProfile();
+                              }
+                            },
+                          ),
+
                           if (authProvider != 'google') ...[
                             const SizedBox(height: 16),
                             _ProfileCard(
                               value: 'Ganti Kata Sandi',
                               icon: Icons.key_outlined,
+
+                              // // BORDER RADIUS UNTUK GANTI KATA SANDI
+                              // borderRadius: BorderRadius.circular(12),
+
+                              // // WARNA BACKGROUND KARTU GANTI KATA SANDI
+                              // backgroundColor: const Color(0xFFF8FAFD),
+
+                              // // WARNA GARIS TEPI / BORDER KARTU GANTI KATA SANDI
+                              // borderColor: const Color(0xFFE7EEF7),
+
+                              // // WARNA TEKS KARTU GANTI KATA SANDI
+                              // textColor: AppColors.text,
+
+                              // // WARNA IKON KUNCI KARTU GANTI KATA SANDI
+                              // iconColor: AppColors.primaryBlue,
+
+                              // // WARNA CHEVRON (PANAH) KARTU GANTI KATA SANDI
+                              // chevronColor: AppColors.muted,
                               onTap: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+                                MaterialPageRoute(
+                                  builder: (_) => const ChangePasswordPage(),
+                                ),
                               ),
                             ),
                           ],
-                          
+
                           const Spacer(),
                           const SizedBox(height: 30),
-                          
+
+                          // tombol logout
                           SizedBox(
                             width: double.infinity,
                             height: 48,
@@ -486,7 +570,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 foregroundColor: AppColors.danger,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(
+                                    12,
+                                  ), //border radius logout
                                 ),
                               ),
                               onPressed: () => showLogoutDialog(context),
@@ -529,7 +615,8 @@ class _AnimatedPhotoButton extends StatefulWidget {
   State<_AnimatedPhotoButton> createState() => _AnimatedPhotoButtonState();
 }
 
-class _AnimatedPhotoButtonState extends State<_AnimatedPhotoButton> with SingleTickerProviderStateMixin {
+class _AnimatedPhotoButtonState extends State<_AnimatedPhotoButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -540,9 +627,10 @@ class _AnimatedPhotoButtonState extends State<_AnimatedPhotoButton> with SingleT
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -574,7 +662,10 @@ class _AnimatedPhotoButtonState extends State<_AnimatedPhotoButton> with SingleT
               child: Icon(widget.icon, size: 32, color: AppColors.primaryBlue),
             ),
             const SizedBox(height: 8),
-            Text(widget.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              widget.label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),
@@ -586,11 +677,23 @@ class _ProfileCard extends StatelessWidget {
   final String value;
   final IconData? icon;
   final VoidCallback? onTap;
+  final BorderRadius? borderRadius;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? textColor;
+  final Color? iconColor;
+  final Color? chevronColor;
 
   const _ProfileCard({
     required this.value,
     this.icon,
     this.onTap,
+    this.borderRadius,
+    this.backgroundColor,
+    this.borderColor,
+    this.textColor,
+    this.iconColor,
+    this.chevronColor,
   });
 
   @override
@@ -600,28 +703,43 @@ class _ProfileCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFD),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE7EEF7), width: 1),
+          // WARNA BACKGROUND KARTU (DEFAULT)
+          color: backgroundColor ?? AppColors.field,
+
+          // BORDER RADIUS KARTU (DEFAULT)
+          borderRadius: borderRadius ?? BorderRadius.circular(12),
+
+          border: Border.all(
+            // WARNA GARIS TEPI / BORDER KARTU (DEFAULT)
+            color: borderColor ?? AppColors.border,
+            width: 1,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, color: AppColors.primaryBlue, size: 20),
+              // WARNA IKON KUNCI / LAINNYA (DEFAULT)
+              Icon(icon, color: iconColor ?? AppColors.primaryBlue, size: 20),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.text,
+                  // WARNA TEKS KARTU (DEFAULT)
+                  color: textColor ?? AppColors.text,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.muted, size: 18),
+            // WARNA CHEVRON / PANAH KANAN (DEFAULT)
+            Icon(
+              Icons.chevron_right,
+              color: chevronColor ?? AppColors.muted,
+              size: 18,
+            ),
           ],
         ),
       ),

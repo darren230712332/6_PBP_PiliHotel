@@ -133,10 +133,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
 
-      final photoRes = _pickedImage != null ? results[0] as Map<String, dynamic> : null;
-      final updateRes = results[_pickedImage != null ? 1 : 0] as Map<String, dynamic>;
+      final photoRes = _pickedImage != null
+          ? results[0] as Map<String, dynamic>
+          : null;
+      final updateRes =
+          results[_pickedImage != null ? 1 : 0] as Map<String, dynamic>;
 
-      if ((photoRes == null || photoRes['success'] == true) && updateRes['success'] == true) {
+      if ((photoRes == null || photoRes['success'] == true) &&
+          updateRes['success'] == true) {
         await showPiliDialog(
           context,
           icon: Icons.check,
@@ -204,16 +208,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           height: 96,
                           fit: BoxFit.cover,
                         )
-                      : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
-                          ? Image.network(
-                              _currentPhotoUrl!,
-                              width: 96,
-                              height: 96,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.camera_alt, size: 34, color: Colors.white),
-                            )
-                          : const Icon(Icons.camera_alt, size: 34, color: Colors.white),
+                      : (_currentPhotoUrl != null &&
+                            _currentPhotoUrl!.isNotEmpty)
+                      ? Image.network(
+                          _currentPhotoUrl!,
+                          width: 96,
+                          height: 96,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.camera_alt,
+                                size: 34,
+                                color: Colors.white,
+                              ),
+                        )
+                      : const Icon(
+                          Icons.camera_alt,
+                          size: 34,
+                          color: Colors.white,
+                        ),
                 ),
               ),
             ),

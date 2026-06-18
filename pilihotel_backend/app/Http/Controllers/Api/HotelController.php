@@ -13,6 +13,7 @@ class HotelController extends Controller
         $hotels = Hotel::query()
             ->with(['rooms' => fn ($query) => $query->withAvg('reviews', 'rating')])
             ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->latest()
             ->get()
             ->map(fn (Hotel $hotel): Hotel => $this->applyAverageRating($hotel));
@@ -27,6 +28,7 @@ class HotelController extends Controller
         $hotels = Hotel::query()
             ->with(['rooms' => fn ($query) => $query->withAvg('reviews', 'rating')])
             ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->orderByRaw("CAST(REPLACE(REPLACE(distance, ' km', ''), ' m', '') AS DECIMAL(8,2))")
             ->get()
             ->map(fn (Hotel $hotel): Hotel => $this->applyAverageRating($hotel));
@@ -40,7 +42,8 @@ class HotelController extends Controller
     {
         $hotel
             ->load(['rooms' => fn ($query) => $query->withAvg('reviews', 'rating')])
-            ->loadAvg('reviews', 'rating');
+            ->loadAvg('reviews', 'rating')
+            ->loadCount('reviews');
 
         return response()->json([
             'data' => $this->applyAverageRating($hotel),
@@ -51,12 +54,16 @@ class HotelController extends Controller
     {
         if ($hotel->reviews_avg_rating !== null) {
             $hotel->rating = round((float) $hotel->reviews_avg_rating, 1);
+        } else {
+            $hotel->rating = 0.0;
         }
 
         if ($hotel->relationLoaded('rooms')) {
             $hotel->rooms->each(function ($room): void {
                 if ($room->reviews_avg_rating !== null) {
                     $room->rating = round((float) $room->reviews_avg_rating, 1);
+                } else {
+                    $room->rating = 0.0;
                 }
             });
         }

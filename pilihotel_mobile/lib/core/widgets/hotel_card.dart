@@ -12,6 +12,7 @@ class UiHotel {
     required this.rating,
     required this.image,
     this.distance = '1.2 km',
+    this.reviewsCount = 0,
   });
 
   final String name;
@@ -20,40 +21,41 @@ class UiHotel {
   final double rating;
   final String image;
   final String distance;
+  final int reviewsCount;
 }
 
 const hotels = [
   UiHotel(
-    name: 'Grand Palace Hotel',
+    name: 'Eastparc Hotel Yogyakarta',
     location: 'Yogyakarta, Indonesia',
-    price: 'Rp1.500.000',
-    rating: 4.8,
-    image: 'bed',
-    distance: '0.8 km',
-  ),
-  UiHotel(
-    name: 'The Palace Boutique',
-    location: 'Sleman, Indonesia',
-    price: 'Rp720.000',
-    rating: 4.6,
-    image: 'pool',
-    distance: '1.5 km',
-  ),
-  UiHotel(
-    name: 'Sea Breeze Resort',
-    location: 'Gunung Kidul',
-    price: 'Rp850.000',
+    price: 'Rp1.200.000',
     rating: 4.7,
+    image: 'pool',
+    distance: '4.5 km',
+  ),
+  UiHotel(
+    name: 'Yogyakarta Marriott Hotel',
+    location: 'Yogyakarta, Indonesia',
+    price: 'Rp2.400.000',
+    rating: 4.8,
+    image: 'modern',
+    distance: '5.2 km',
+  ),
+  UiHotel(
+    name: 'Hotel Tentrem Yogyakarta',
+    location: 'Jetis, Yogyakarta',
+    price: 'Rp2.100.000',
+    rating: 4.8,
     image: 'sea',
     distance: '2.1 km',
   ),
   UiHotel(
-    name: 'Urban Stay Suites',
-    location: 'Malioboro',
-    price: 'Rp500.000',
-    rating: 4.5,
-    image: 'night',
-    distance: '3.4 km',
+    name: 'THE 1O1 Yogyakarta Tugu Hotel',
+    location: 'Jetis, Yogyakarta',
+    price: 'Rp978.000',
+    rating: 4.6,
+    image: 'bed',
+    distance: '1.2 km',
   ),
 ];
 

@@ -4,12 +4,12 @@ import '../core/colors.dart';
 import '../core/services/auth_service.dart';
 import '../core/widgets/custom_dialog.dart';
 
-Future<bool> showEditNameDialog(
+Future<bool> showEditPhoneDialog(
   BuildContext context, {
-  required String currentName,
+  required String currentPhone,
 }) async {
   final authService = AuthService();
-  final controller = TextEditingController(text: currentName);
+  final controller = TextEditingController(text: currentPhone);
 
   final result = await showDialog<bool>(
     context: context,
@@ -29,7 +29,7 @@ Future<bool> showEditNameDialog(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Ubah Nama',
+                    'Ubah Nomor Telepon',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 17,
@@ -42,7 +42,7 @@ Future<bool> showEditNameDialog(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'NAMA LENGKAP',
+                        'NOMOR TELEPON',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -52,13 +52,14 @@ Future<bool> showEditNameDialog(
                       const SizedBox(height: 8),
                       TextField(
                         controller: controller,
+                        keyboardType: TextInputType.phone,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.text,
                         ),
                         decoration: const InputDecoration(
-                          hintText: 'Masukkan nama lengkap',
+                          hintText: 'Contoh: 08123456789',
                           hintStyle: TextStyle(
                             fontSize: 12,
                             color: AppColors.muted,
@@ -119,13 +120,25 @@ Future<bool> showEditNameDialog(
                         onTap: loading
                             ? null
                             : () async {
-                                final newName = controller.text.trim();
-                                if (newName.isEmpty) {
+                                final newPhone = controller.text.trim();
+                                if (newPhone.isEmpty) {
                                   showPiliDialog(
                                     context,
                                     icon: Icons.error,
                                     title: 'Gagal',
-                                    message: 'Nama tidak boleh kosong.',
+                                    message: 'Nomor telepon tidak boleh kosong.',
+                                  );
+                                  return;
+                                }
+
+                                final phoneRegex = RegExp(r'^\+?[0-9\s\-]{8,20}$');
+                                if (!phoneRegex.hasMatch(newPhone)) {
+                                  showPiliDialog(
+                                    context,
+                                    icon: Icons.error,
+                                    title: 'Gagal',
+                                    message:
+                                        'Format nomor telepon tidak valid. Gunakan angka, spasi, atau tanda minus (-), minimal 8 karakter.',
                                   );
                                   return;
                                 }
@@ -135,7 +148,7 @@ Future<bool> showEditNameDialog(
                                   const Duration(seconds: 2),
                                 );
                                 final updateResult = await authService
-                                    .updateProfile(name: newName);
+                                    .updateProfile(phone: newPhone);
                                 if (!context.mounted) return;
                                 setStateDialog(() => loading = false);
 
@@ -146,7 +159,7 @@ Future<bool> showEditNameDialog(
                                     icon: Icons.check_circle,
                                     title: 'Simpan Berhasil',
                                     message:
-                                        'Perubahan nama profil Anda telah berhasil disimpan.',
+                                        'Perubahan nomor telepon Anda telah berhasil disimpan.',
                                   );
                                 } else {
                                   showPiliDialog(
@@ -155,7 +168,7 @@ Future<bool> showEditNameDialog(
                                     title: 'Gagal',
                                     message:
                                         updateResult['message']?.toString() ??
-                                        'Gagal mengubah nama.',
+                                        'Gagal mengubah nomor telepon.',
                                   );
                                 }
                               },
@@ -164,7 +177,6 @@ Future<bool> showEditNameDialog(
                           height: 44,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            //simpan
                             color: AppColors.primaryBlue,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
