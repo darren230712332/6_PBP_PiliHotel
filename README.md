@@ -1,8 +1,6 @@
-#  Penjelasan aplikasi PiliHotel
-
 PiliHotel adalah aplikasi pemesanan (booking) hotel berbasis mobile yang dirancang untuk memudahkan pengguna dalam mencari hotel, memesan kamar secara real-time, mengelola profil, memberikan review, serta mendapatkan tiket booking berformat PDF.
 
-Aplikasi ini menggunakan arsitektur Client-Server dengan memisahkan bagian Backend (Laravel API) dan Frontend Mobile (Flutter).
+Aplikasi ini menggunakan arsitektur Client-Server dengan memisahkan bagian Backend (Laravel) dan Frontend Mobile (Flutter).
 
 -------------------------------------------------------------------------------------------------------------
 
@@ -33,21 +31,6 @@ Aplikasi ini menggunakan arsitektur Client-Server dengan memisahkan bagian Backe
    - Unggah foto profil.
    - Integrasi Firebase Cloud Messaging (FCM) Token untuk mendukung notifikasi perangkat.
 
-------------------------------------------------------------------------------------------------------------
-# Arsitektur & Teknologi
-
-# Backend (pilihotel_backend)
-- Framework: Laravel 11 (PHP)
-- Autentikasi: Laravel Sanctum (Token-based authentication)
-- Database: MySQL / SQLite
-- Fungsi Tambahan: PDF Generator (untuk tiket booking), File Upload (untuk foto profil & ulasan).
-
- Mobile App (pilihotel_mobile)
-- Framework: Flutter (Dart)
-- State Management / Widgets: Custom widgets terstruktur (buttons, textfields, appbars, dialogs)
-- Fitur PDF: Rendering & viewing e-tiket PDF secara native di dalam aplikasi.
-- Integrasi Pihak Ketiga: Firebase Core & FCM (Firebase Cloud Messaging).
-
 -------------------------------------------------------------------------------------------------------------
 # Entity Relationship Diagram (ERD)
 
@@ -65,7 +48,21 @@ Aplikasi ini menggunakan arsitektur Client-Server dengan memisahkan bagian Backe
 
 
 
+
+
 -------------------------------------------------------------------------------------------------------------
 # Link Figma
 
 https://www.figma.com/design/6ffDYiLvh1E6GKlVT8BSFO/PBP-HOTEL-6--NEW-?node-id=1-1180&t=g0xuiy2K29Cr9zoY-1
+
+-------------------------------------------------------------------------------------------------------------
+
+#  pembagian tugas & tanggung jawab setiap fungsional
+
+![Pembagian Tugas](pilihotel_mobile/erd/pembagian_tugas.png)
+
+-------------------------------------------------------------------------------------------------------------
+
+#   kendala & solusi
+
+![Kendala Proyek](pilihotel_mobile/erd/Kendala.png)
