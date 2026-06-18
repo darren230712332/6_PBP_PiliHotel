@@ -59,7 +59,7 @@ https://www.figma.com/design/6ffDYiLvh1E6GKlVT8BSFO/PBP-HOTEL-6--NEW-?node-id=1-
 
 #  pembagian tugas & tanggung jawab setiap fungsional
 
-![Pembagian Tugas](pilihotel_mobile/erd/pembagian_tugas.png)
+![Pembagian Tugas](pilihotel_mobile/erd/pembagian.png)
 
 -------------------------------------------------------------------------------------------------------------
 
