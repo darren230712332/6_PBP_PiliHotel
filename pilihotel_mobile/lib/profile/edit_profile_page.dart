@@ -51,6 +51,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       imageQuality: 70,
     );
     if (result != null) {
+      debugPrint('Image picked: ${result.path}');
       setState(() => _pickedImage = File(result.path));
     }
   }
@@ -207,6 +208,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           width: 96,
                           height: 96,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint('Image.file error: $error');
+                            return const Icon(Icons.error, color: Colors.red);
+                          },
                         )
                       : (_currentPhotoUrl != null &&
                             _currentPhotoUrl!.isNotEmpty)
