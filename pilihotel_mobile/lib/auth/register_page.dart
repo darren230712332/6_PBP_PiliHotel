@@ -39,6 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
       imageQuality: 60,
     );
     if (result != null) {
+      debugPrint('Image picked: ${result.path}');
       setState(() {
         selectedImageFile = File(result.path);
       });
@@ -150,6 +151,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 width: 84,
                                 height: 84,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  debugPrint('Image.file error: $error');
+                                  return const Icon(Icons.error, color: Colors.red);
+                                },
                               )
                             : Container(
                                 decoration: const BoxDecoration(
