@@ -12,12 +12,14 @@ class SuccessScaffold extends StatelessWidget {
     required this.message,
     required this.button,
     required this.onPressed,
+    this.photoUrl,
   });
 
   final String title;
   final String message;
   final String button;
   final VoidCallback onPressed;
+  final String? photoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,31 @@ class SuccessScaffold extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 28),
-              const PiliLogoCard(size: 80),
+              if (photoUrl != null && photoUrl!.isNotEmpty)
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      photoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const PiliLogoCard(size: 80),
+                    ),
+                  ),
+                )
+              else
+                const PiliLogoCard(size: 80),
               const SizedBox(height: 14),
               const Text(
                 'PiliHotel',

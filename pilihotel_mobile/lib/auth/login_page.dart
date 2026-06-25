@@ -275,9 +275,10 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success'] == true) {
       final String name = (result['user'] as dynamic)?.name ?? 'Andi';
+      final String? photoUrl = (result['user'] as dynamic)?.photoUrl;
       Navigator.pushAndRemoveUntil(
         context,
-        _route(LoginSuccessPage(userName: name)),
+        _route(LoginSuccessPage(userName: name, photoUrl: photoUrl)),
         (_) => false,
       );
     } else {
@@ -300,9 +301,10 @@ class _LoginPageState extends State<LoginPage> {
     if (result['success'] == true) {
       setState(() => loading = false);
       final String name = (result['user'] as dynamic)?.name ?? 'Andi';
+      final String? photoUrl = (result['user'] as dynamic)?.photoUrl;
       Navigator.pushAndRemoveUntil(
         context,
-        _route(LoginSuccessPage(userName: name)),
+        _route(LoginSuccessPage(userName: name, photoUrl: photoUrl)),
         (_) => false,
       );
     } else if (result['needs_mock'] == true) {
@@ -365,9 +367,10 @@ class _LoginPageState extends State<LoginPage> {
                             
                             if (mockResult['success'] == true) {
                               final String name = (mockResult['user'] as dynamic)?.name ?? 'Andi';
+                              final String? photoUrl = (mockResult['user'] as dynamic)?.photoUrl;
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                _route(LoginSuccessPage(userName: name)),
+                                _route(LoginSuccessPage(userName: name, photoUrl: photoUrl)),
                                 (_) => false,
                               );
                             } else {

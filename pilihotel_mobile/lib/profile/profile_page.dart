@@ -677,23 +677,11 @@ class _ProfileCard extends StatelessWidget {
   final String value;
   final IconData? icon;
   final VoidCallback? onTap;
-  final BorderRadius? borderRadius;
-  final Color? backgroundColor;
-  final Color? borderColor;
-  final Color? textColor;
-  final Color? iconColor;
-  final Color? chevronColor;
 
   const _ProfileCard({
     required this.value,
     this.icon,
     this.onTap,
-    this.borderRadius,
-    this.backgroundColor,
-    this.borderColor,
-    this.textColor,
-    this.iconColor,
-    this.chevronColor,
   });
 
   @override
@@ -704,14 +692,14 @@ class _ProfileCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           // WARNA BACKGROUND KARTU (DEFAULT)
-          color: backgroundColor ?? AppColors.field,
+          color: AppColors.field,
 
           // BORDER RADIUS KARTU (DEFAULT)
-          borderRadius: borderRadius ?? BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12),
 
           border: Border.all(
             // WARNA GARIS TEPI / BORDER KARTU (DEFAULT)
-            color: borderColor ?? AppColors.border,
+            color: AppColors.border,
             width: 1,
           ),
         ),
@@ -720,24 +708,24 @@ class _ProfileCard extends StatelessWidget {
           children: [
             if (icon != null) ...[
               // WARNA IKON KUNCI / LAINNYA (DEFAULT)
-              Icon(icon, color: iconColor ?? AppColors.primaryBlue, size: 20),
+              Icon(icon, color: AppColors.primaryBlue, size: 20),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   // WARNA TEKS KARTU (DEFAULT)
-                  color: textColor ?? AppColors.text,
+                  color: AppColors.text,
                 ),
               ),
             ),
             // WARNA CHEVRON / PANAH KANAN (DEFAULT)
-            Icon(
+            const Icon(
               Icons.chevron_right,
-              color: chevronColor ?? AppColors.muted,
+              color: AppColors.muted,
               size: 18,
             ),
           ],
